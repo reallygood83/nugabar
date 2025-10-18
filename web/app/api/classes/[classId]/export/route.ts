@@ -82,23 +82,13 @@ export async function POST(
     // 엑셀 파일 생성
     const excelBuffer = generateClassExcel(allRecords, className);
 
-    // Buffer를 Uint8Array로 변환
-    const uint8Array = new Uint8Array(excelBuffer);
-
-    // Response 헤더 설정
-    const headers = new Headers();
-    headers.set(
-      'Content-Type',
-      'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
-    );
-    headers.set(
-      'Content-Disposition',
-      `attachment; filename="${encodeURIComponent(className)}_누가기록.xlsx"`
-    );
-
-    return new NextResponse(uint8Array, {
+    // Response 반환 (Buffer는 자동으로 ArrayBuffer로 변환됨)
+    return new Response(excelBuffer, {
       status: 200,
-      headers,
+      headers: {
+        'Content-Type': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+        'Content-Disposition': `attachment; filename="${encodeURIComponent(className)}_누가기록.xlsx"`,
+      },
     });
   } catch (error: any) {
     console.error('엑셀 다운로드 오류:', error);
