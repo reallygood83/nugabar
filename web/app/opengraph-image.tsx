@@ -1,5 +1,8 @@
 import { ImageResponse } from 'next/og';
 
+// Edge Runtime 사용 (필수)
+export const runtime = 'edge';
+
 // 이미지 크기 설정
 export const size = {
   width: 1200,
@@ -7,6 +10,9 @@ export const size = {
 };
 
 export const contentType = 'image/png';
+
+// Alt 텍스트
+export const alt = '누가바 - AI 기반 학생 행동특성 및 누가기록 생성기';
 
 // OG 이미지 생성
 export default async function Image() {
