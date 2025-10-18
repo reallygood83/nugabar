@@ -40,6 +40,12 @@ export default function StudentRecordPage() {
   // 누가기록 생성을 위한 상태 (기존 시스템 재사용)
   const [showGenerateForm, setShowGenerateForm] = useState(false);
 
+  // 복사 핸들러
+  const copyToClipboard = (text: string) => {
+    navigator.clipboard.writeText(text);
+    alert('✅ 클립보드에 복사되었습니다!');
+  };
+
   useEffect(() => {
     if (user && classId && studentId) {
       loadStudentData();
@@ -219,7 +225,17 @@ export default function StudentRecordPage() {
                     </div>
 
                     <div className="bg-blue-50 p-4 rounded-lg mb-3">
-                      <h4 className="text-sm font-semibold text-gray-700 mb-2">📝 누가기록 내용</h4>
+                      <div className="flex justify-between items-center mb-2">
+                        <h4 className="text-sm font-semibold text-gray-700">📝 누가기록 내용</h4>
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => copyToClipboard(record.content)}
+                          className="text-xs h-7"
+                        >
+                          📋 복사
+                        </Button>
+                      </div>
                       <p className="text-gray-800 leading-relaxed whitespace-pre-wrap">
                         {record.content}
                       </p>
