@@ -30,7 +30,7 @@ export const metadata: Metadata = {
     description: '교사의 업무 부담을 줄이는 스마트한 AI 도구. 행동특성 및 누가기록을 몇 초 만에 자동 생성하세요.',
     images: [
       {
-        url: '/og-image.png',
+        url: 'https://nuga-bar.vercel.app/opengraph-image',
         width: 1200,
         height: 630,
         alt: '누가바 - 학생 행동특성 및 누가기록 생성기',
@@ -41,7 +41,7 @@ export const metadata: Metadata = {
     card: 'summary_large_image',
     title: '누가바 - AI 기반 학생 기록 생성기',
     description: '교사의 업무 부담을 줄이는 스마트한 AI 도구. 행동특성 및 누가기록을 몇 초 만에 자동 생성하세요.',
-    images: ['/og-image.png'],
+    images: ['https://nuga-bar.vercel.app/opengraph-image'],
   },
   robots: {
     index: true,
