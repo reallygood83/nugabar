@@ -19,7 +19,12 @@ export const metadata: Metadata = {
   keywords: ["누가기록", "행동특성", "교사", "AI", "자동생성", "NEIS", "학생기록", "교육"],
   authors: [{ name: "누가바" }],
   icons: {
-    icon: '/favicon.ico',
+    icon: [
+      { url: '/icon', sizes: '32x32', type: 'image/png' },
+    ],
+    apple: [
+      { url: '/apple-icon', sizes: '180x180', type: 'image/png' },
+    ],
   },
   openGraph: {
     type: 'website',
