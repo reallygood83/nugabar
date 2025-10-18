@@ -71,8 +71,8 @@ export function checkNeisCompliance(text: string, maxLength: number = 500): {
   const sentences = trimmedText.split(/[.!?]/).filter(s => s.trim().length > 0);
   const invalidEndings: string[] = [];
 
-  // 올바른 명사형 종결어미 패턴
-  const validEndings = /(함|임|됨|음|을 보임|를 보임|하는 모습을 보임|는 모습을 보임|하는 특성을 보임|에 해당함|으로 나타남|하며 성장함)$/;
+  // 올바른 명사형 종결어미 패턴 (동사 기반 명사형 포함)
+  const validEndings = /(함|임|됨|음|냄|줌|남|감|봄|듦|짐|킴|침|림|룸|을 보임|를 보임|하는 모습을 보임|는 모습을 보임|하는 특성을 보임|에 해당함|으로 나타남|하며 성장함)$/;
 
   // 금지된 어미 패턴 (Apps Script 로직)
   const prohibitedEndings = /(습니함|했습니함|였습니함|았습니함|었습니함|했습니다|였습니다|았습니다|었습니다|입니다|합니다|했다|한다|이다|해요|했어요|아요|어요)$/;
@@ -183,14 +183,17 @@ export function ensureNeisCompliance(text: string, maxLength: number = 500): str
     // 금지된 어미 패턴 (중복 패턴 추가)
     const prohibitedEndings = /(습니함|했습니함|였습니함|았습니함|었습니함|했습니다|였습니다|았습니다|었습니다|입니다|합니다|했다|한다|이다|해요|했어요|아요|어요|큼함|작음함|많음함|적음함|높음함|낮음함|좋음함|나쁨함|함함|음함|임함|됨함)$/;
 
-    // 올바른 명사형 종결어미 패턴
-    const validEndings = /(함|임|됨|음|큼|작음|많음|적음|높음|낮음|좋음|나쁨|을 보임|를 보임|하는 모습을 보임|는 모습을 보임)$/;
+    // 올바른 명사형 종결어미 패턴 (동사 기반 명사형 포함)
+    const validEndings = /(함|임|됨|음|큼|작음|많음|적음|높음|낮음|좋음|나쁨|냄|줌|남|감|봄|듦|짐|킴|침|림|룸|을 보임|를 보임|하는 모습을 보임|는 모습을 보임)$/;
 
     // 1단계: 모든 중복 어미 패턴 제거 (가장 먼저, if 블록 밖에서 처리)
+    // 기본 명사형 종결어미 중복 제거
     sentence = sentence.replace(/함함$/, '함');
     sentence = sentence.replace(/음함$/, '음');
     sentence = sentence.replace(/임함$/, '임');
     sentence = sentence.replace(/됨함$/, '됨');
+
+    // 형용사형 어미 중복 제거
     sentence = sentence.replace(/큼함$/, '큼');
     sentence = sentence.replace(/작음함$/, '작음');
     sentence = sentence.replace(/많음함$/, '많음');
@@ -199,6 +202,19 @@ export function ensureNeisCompliance(text: string, maxLength: number = 500): str
     sentence = sentence.replace(/낮음함$/, '낮음');
     sentence = sentence.replace(/좋음함$/, '좋음');
     sentence = sentence.replace(/나쁨함$/, '나쁨');
+
+    // 동사 기반 명사형 어미 중복 제거 (사용자 버그 수정)
+    sentence = sentence.replace(/냄함$/, '냄');    // 드러내다 → 드러냄
+    sentence = sentence.replace(/줌함$/, '줌');    // 보여주다 → 보여줌
+    sentence = sentence.replace(/남함$/, '남');    // 남다 → 남
+    sentence = sentence.replace(/감함$/, '감');    // 느끼다 → 느낌
+    sentence = sentence.replace(/봄함$/, '봄');    // 보다 → 봄
+    sentence = sentence.replace(/듦함$/, '듦');    // 들다 → 듦
+    sentence = sentence.replace(/짐함$/, '짐');    // 지다 → 짐
+    sentence = sentence.replace(/킴함$/, '킴');    // 끼다 → 끼침
+    sentence = sentence.replace(/침함$/, '침');    // 하다 → 함 (끼침, 꺼침 등)
+    sentence = sentence.replace(/림함$/, '림');    // 이루다 → 이룸
+    sentence = sentence.replace(/룸함$/, '룸');    // 이루다 → 이룸
 
     // 2단계: 형용사형 어미 변환 (모든 문장에 적용, if 블록 밖)
     sentence = sentence.replace(/커요$/, '큼');
