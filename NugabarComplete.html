@@ -1,0 +1,4523 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <base target="_top">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>행동특성 및 종합의견 + 누가기록 생성기 - Complete System</title>
+  <style>
+    :root {
+      --primary-blue: #1976D2;
+      --secondary-green: #2E7D32;
+      --accent-orange: #F57F17;
+      --accent-teal: #00695C;
+      --text-primary: #212121;
+      --text-secondary: #757575;
+      --background: #FAFAFA;
+      --surface: #FFFFFF;
+      --error: #D32F2F;
+      --warning: #F57C00;
+      --success: #388E3C;
+      --space-xs: 4px;
+      --space-sm: 8px;
+      --space-md: 16px;
+      --space-lg: 24px;
+      --space-xl: 32px;
+      --space-2xl: 48px;
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Malgun Gothic', sans-serif;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      min-height: 100vh;
+      padding: var(--space-md);
+      color: var(--text-primary);
+      font-size: 16px;
+      line-height: 1.6;
+    }
+
+    .container {
+      max-width: 1400px;
+      margin: 0 auto;
+      background: rgba(255, 255, 255, 0.98);
+      backdrop-filter: blur(10px);
+      border-radius: 20px;
+      padding: 2rem;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15);
+    }
+
+    .header {
+      text-align: center;
+      margin-bottom: 2rem;
+      padding-bottom: 1rem;
+      border-bottom: 3px solid #e0e0e0;
+    }
+
+    .header h1 {
+      font-size: 2.8rem;
+      color: #4285F4;
+      margin-bottom: 0.5rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+    }
+
+    .complete-badge {
+      background: linear-gradient(135deg, #FF6B6B 0%, #4ECDC4 100%);
+      color: white;
+      padding: 0.4rem 1rem;
+      border-radius: 20px;
+      font-size: 0.9rem;
+      font-weight: 700;
+      margin-left: 0.5rem;
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+    }
+
+    .header p {
+      color: #666;
+      font-size: 1.2rem;
+      font-weight: 500;
+    }
+
+    .workspace-info {
+      background: #ffffff;
+      border: 2px solid #34A853;
+      border-radius: 15px;
+      padding: 1.5rem;
+      margin-bottom: 2rem;
+      text-align: center;
+      box-shadow: 0 4px 12px rgba(52, 168, 83, 0.1);
+    }
+
+    .workspace-info h3 {
+      color: #34A853;
+      margin-bottom: 1rem;
+      font-size: 1.3rem;
+      font-weight: 700;
+    }
+
+    .workspace-info p {
+      color: #333;
+      font-weight: 500;
+      margin-bottom: 1.5rem;
+    }
+
+    .workspace-actions {
+      display: flex;
+      gap: 1rem;
+      justify-content: center;
+      flex-wrap: wrap;
+    }
+
+    /* AI 생성 텍스트 시각적 구분 스타일 */
+    .generation-badge {
+      display: inline-block;
+      padding: 0.3rem 0.8rem;
+      border-radius: 12px;
+      font-size: 0.8rem;
+      font-weight: 600;
+      margin-bottom: 0.5rem;
+      text-align: center;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    }
+
+    .ai-badge {
+      background: linear-gradient(135deg, #FF6B6B 0%, #4ECDC4 100%);
+      color: white;
+      animation: pulse 2s infinite;
+    }
+
+    .basic-badge {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+    }
+
+    @keyframes pulse {
+      0% { transform: scale(1); }
+      50% { transform: scale(1.05); }
+      100% { transform: scale(1); }
+    }
+
+    .ai-generated {
+      background: linear-gradient(135deg, #fff5f5 0%, #f0fdfd 100%);
+      border: 2px solid #FF6B6B;
+      box-shadow: 0 4px 12px rgba(255, 107, 107, 0.15);
+    }
+
+    .basic-generated {
+      background: linear-gradient(135deg, #f8f9ff 0%, #f3f4f6 100%);
+      border: 2px solid #667eea;
+      box-shadow: 0 4px 12px rgba(102, 126, 234, 0.15);
+    }
+
+    /* 복사 버튼 스타일 */
+    .copy-button-overlay {
+      position: absolute;
+      top: 0.5rem;
+      right: 0.5rem;
+      background: rgba(255, 255, 255, 0.9);
+      border: 1px solid #ddd;
+      border-radius: 8px;
+      padding: 0.4rem 0.8rem;
+      font-size: 0.8rem;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    }
+
+    .copy-button-overlay:hover {
+      background: #4285F4;
+      color: white;
+      transform: translateY(-1px);
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    }
+
+    .copy-button-small {
+      background: #f8f9fa;
+      border: 1px solid #dee2e6;
+      border-radius: 6px;
+      padding: 0.3rem 0.6rem;
+      font-size: 0.75rem;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      margin-left: 0.5rem;
+    }
+
+    .copy-button-small:hover {
+      background: #4285F4;
+      color: white;
+      border-color: #4285F4;
+    }
+
+    .textarea-container {
+      position: relative;
+      margin-bottom: 1rem;
+    }
+
+    /* 누가기록 표시 향상 */
+    .record-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background: linear-gradient(135deg, #e8f5e8 0%, #f0f8ff 100%);
+      padding: 0.8rem 1rem;
+      border-radius: 8px 8px 0 0;
+      border-bottom: 2px solid #34A853;
+    }
+
+    .record-content {
+      background: white;
+      padding: 1rem;
+      border-radius: 0 0 8px 8px;
+      border: 2px solid #34A853;
+      border-top: none;
+      line-height: 1.6;
+      font-size: 0.95rem;
+    }
+
+    .record-meta {
+      display: flex;
+      gap: 1rem;
+      align-items: center;
+      font-size: 0.8rem;
+      color: #666;
+      margin-top: 0.5rem;
+      padding-top: 0.5rem;
+      border-top: 1px solid #eee;
+    }
+
+    .compliance-badge {
+      padding: 0.2rem 0.6rem;
+      border-radius: 12px;
+      font-size: 0.75rem;
+      font-weight: 600;
+      text-align: center;
+    }
+
+    .compliance-badge.compliant {
+      background: linear-gradient(135deg, #d4edda 0%, #c3e6cb 100%);
+      color: #155724;
+      border: 1px solid #c3e6cb;
+    }
+
+    .compliance-badge.warning {
+      background: linear-gradient(135deg, #fff3cd 0%, #ffeaa7 100%);
+      color: #856404;
+      border: 1px solid #ffeaa7;
+    }
+
+    /* 탭 시스템 */
+    .tab-container {
+      display: flex;
+      gap: 0.5rem;
+      margin-bottom: 2rem;
+      border-bottom: 3px solid #e0e0e0;
+      overflow-x: auto;
+    }
+
+    .tab-button {
+      padding: 1.2rem 2rem;
+      border: none;
+      background: var(--surface);
+      color: var(--text-secondary);
+      cursor: pointer;
+      border-radius: 12px 12px 0 0;
+      font-size: 1.1rem;
+      font-weight: 600;
+      transition: all 0.3s ease;
+      white-space: nowrap;
+      position: relative;
+      border: 2px solid transparent;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+    }
+
+    .tab-button:hover {
+      background: #f0f7ff;
+      color: var(--primary-blue);
+      transform: translateY(-2px);
+      border-color: #e3f2fd;
+      box-shadow: 0 4px 16px rgba(25, 118, 210, 0.15);
+    }
+
+    .tab-button.active {
+      background: var(--primary-blue);
+      color: white;
+      border-bottom: 3px solid var(--primary-blue);
+      border-color: var(--primary-blue);
+      box-shadow: 0 4px 20px rgba(25, 118, 210, 0.3);
+      transform: translateY(-2px);
+    }
+
+    .tab-content {
+      display: none;
+    }
+
+    .tab-content.active {
+      display: block;
+    }
+
+    .section {
+      background: white;
+      border-radius: 15px;
+      padding: 1.5rem;
+      margin-bottom: 1.5rem;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+      border: 1px solid #e0e0e0;
+    }
+
+    .section-title {
+      font-size: 1.6rem;
+      color: #333;
+      margin-bottom: 1.5rem;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      border-bottom: 2px solid #f0f0f0;
+      padding-bottom: 0.8rem;
+      font-weight: 600;
+    }
+
+    /* 키워드 검색 및 통계 */
+    .search-container {
+      display: flex;
+      gap: 1rem;
+      margin-bottom: 2rem;
+      flex-wrap: wrap;
+    }
+
+    .search-box {
+      flex: 2;
+      position: relative;
+      min-width: 300px;
+    }
+
+    .search-input {
+      width: 100%;
+      padding: 1rem 1rem 1rem 3rem;
+      border: 2px solid #e0e0e0;
+      border-radius: 25px;
+      font-size: 1.1rem;
+      background: white;
+      transition: all 0.3s ease;
+    }
+
+    .search-input:focus {
+      outline: none;
+      border-color: #4285F4;
+      box-shadow: 0 0 0 4px rgba(66, 133, 244, 0.1);
+    }
+
+    .search-icon {
+      position: absolute;
+      left: 1rem;
+      top: 50%;
+      transform: translateY(-50%);
+      color: #666;
+      font-size: 1.2rem;
+    }
+
+    .statistics {
+      flex: 1;
+      display: flex;
+      gap: 1rem;
+      min-width: 300px;
+    }
+
+    .stat-card {
+      background: linear-gradient(135deg, #4285F4 0%, #34A853 100%);
+      color: white;
+      padding: 1rem;
+      border-radius: 12px;
+      text-align: center;
+      flex: 1;
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+    }
+
+    .stat-number {
+      font-size: 1.8rem;
+      font-weight: 700;
+      margin-bottom: 0.2rem;
+    }
+
+    .stat-label {
+      font-size: 0.9rem;
+      opacity: 0.9;
+    }
+
+    /* 선택된 키워드 표시 */
+    .selected-keywords {
+      background: #f8f9fa;
+      border: 2px dashed #ddd;
+      border-radius: 12px;
+      padding: 1.5rem;
+      margin-bottom: 2rem;
+      min-height: 80px;
+    }
+
+    .selected-keywords h4 {
+      color: #666;
+      margin-bottom: 1rem;
+      font-size: 1.1rem;
+    }
+
+    .keyword-badges {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+    }
+
+    .keyword-badge {
+      background: #4285F4;
+      color: white;
+      padding: 0.5rem 1rem;
+      border-radius: 20px;
+      font-size: 0.9rem;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+      animation: slideIn 0.3s ease;
+    }
+
+    .keyword-badge .intensity {
+      background: rgba(255, 255, 255, 0.2);
+      padding: 0.2rem 0.5rem;
+      border-radius: 10px;
+      font-size: 0.8rem;
+    }
+
+    .keyword-badge .remove {
+      cursor: pointer;
+      background: rgba(255, 255, 255, 0.2);
+      border-radius: 50%;
+      width: 20px;
+      height: 20px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.8rem;
+      transition: background 0.2s ease;
+    }
+
+    .keyword-badge .remove:hover {
+      background: rgba(255, 255, 255, 0.4);
+    }
+
+    @keyframes slideIn {
+      from {
+        opacity: 0;
+        transform: translateY(-10px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    /* 카테고리 필터 */
+    .category-filters {
+      display: flex;
+      gap: 0.5rem;
+      margin-bottom: 1.5rem;
+      flex-wrap: wrap;
+    }
+
+    .category-filter {
+      padding: 0.8rem 1.5rem;
+      border: 2px solid #e0e0e0;
+      background: white;
+      border-radius: 25px;
+      cursor: pointer;
+      font-weight: 600;
+      transition: all 0.3s ease;
+    }
+
+    .category-filter:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+    }
+
+    .category-filter.active {
+      background: #4285F4;
+      color: white;
+      border-color: #4285F4;
+    }
+
+    /* 키워드 그리드 */
+    .keyword-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+      gap: 1.5rem;
+    }
+
+    .keyword-category {
+      background: #f8f9fa;
+      border: 2px solid #e0e0e0;
+      border-radius: 15px;
+      overflow: hidden;
+      transition: all 0.3s ease;
+    }
+
+    .keyword-category:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+    }
+
+    .category-header {
+      padding: 1.5rem;
+      background: linear-gradient(135deg, #4285F4 0%, #34A853 100%);
+      color: white;
+      cursor: pointer;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .category-title {
+      font-weight: 700;
+      font-size: 1.2rem;
+    }
+
+    .category-count {
+      background: rgba(255, 255, 255, 0.2);
+      padding: 0.3rem 0.8rem;
+      border-radius: 15px;
+      font-size: 0.9rem;
+    }
+
+    .keyword-list {
+      padding: 1.5rem;
+      max-height: 400px;
+      overflow-y: auto;
+    }
+
+    .keyword-list.collapsed {
+      display: none;
+    }
+
+    .keyword-item {
+      display: flex;
+      align-items: center;
+      padding: 0.8rem 0;
+      border-bottom: 1px solid #eee;
+      transition: background 0.2s ease;
+    }
+
+    .keyword-item:hover {
+      background: #f0f0f0;
+      border-radius: 8px;
+      padding-left: 0.5rem;
+    }
+
+    .keyword-item:last-child {
+      border-bottom: none;
+    }
+
+    .keyword-checkbox {
+      margin-right: 1rem;
+      transform: scale(1.2);
+      cursor: pointer;
+    }
+
+    .keyword-label {
+      flex: 1;
+      cursor: pointer;
+      font-weight: 500;
+      font-size: 1rem;
+    }
+
+    .keyword-intensity {
+      display: flex;
+      gap: 0.25rem;
+    }
+
+    .intensity-btn {
+      padding: 0.4rem 0.8rem;
+      border: 1px solid #ddd;
+      background: white;
+      border-radius: 15px;
+      cursor: pointer;
+      font-size: 0.85rem;
+      font-weight: 600;
+      transition: all 0.2s ease;
+    }
+
+    .intensity-btn:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    }
+
+    .intensity-btn.active {
+      background: #4285F4;
+      color: white;
+      border-color: #4285F4;
+    }
+
+    /* 버튼 스타일 */
+    .btn {
+      padding: 1rem 2rem;
+      border: none;
+      border-radius: 25px;
+      cursor: pointer;
+      font-size: 1.1rem;
+      font-weight: 600;
+      transition: all 0.3s ease;
+      margin-right: 1rem;
+      margin-bottom: 0.5rem;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 25px rgba(0, 0, 0, 0.2);
+    }
+
+    .btn-primary {
+      background: linear-gradient(135deg, #4285F4 0%, #1976D2 100%);
+      color: white;
+    }
+
+    .btn-success {
+      background: linear-gradient(135deg, #34A853 0%, #2E7D32 100%);
+      color: white;
+    }
+
+    .btn-warning {
+      background: linear-gradient(135deg, #FBBC04 0%, #F57F17 100%);
+      color: white;
+    }
+
+    .btn-secondary {
+      background: #6c757d;
+      color: white;
+    }
+
+    /* 입력 필드 */
+    .form-group {
+      margin-bottom: 1.5rem;
+    }
+
+    .form-label {
+      display: block;
+      margin-bottom: 0.8rem;
+      font-weight: 600;
+      color: #333;
+      font-size: 1.1rem;
+    }
+
+    .form-input {
+      width: 100%;
+      padding: 1rem;
+      border: 2px solid #e0e0e0;
+      border-radius: 12px;
+      font-size: 1rem;
+      transition: all 0.3s ease;
+    }
+
+    .form-input:focus {
+      outline: none;
+      border-color: #4285F4;
+      box-shadow: 0 0 0 4px rgba(66, 133, 244, 0.1);
+    }
+
+    .form-textarea {
+      min-height: 120px;
+      resize: vertical;
+      font-family: inherit;
+    }
+
+    /* 학생 정보 입력 폼 */
+    .student-form-container {
+      background: linear-gradient(135deg, #e8f5e8 0%, #f0f8ff 100%);
+      border: 2px solid #4285F4;
+      border-radius: 15px;
+      padding: 1.5rem;
+      margin-bottom: 1rem;
+    }
+
+    .form-row {
+      display: flex;
+      gap: 1rem;
+      align-items: end;
+    }
+
+    .student-info-display {
+      margin-top: 1rem;
+      padding: 1rem;
+      background: #ffffff;
+      border: 2px solid #e0e0e0;
+      border-radius: 10px;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+    }
+
+    .info-badge {
+      display: flex;
+      gap: 0.5rem;
+      align-items: center;
+    }
+
+    .student-number-badge, .student-name-badge {
+      padding: 0.4rem 0.8rem;
+      border-radius: 8px;
+      font-weight: 600;
+      font-size: 0.9rem;
+      border: 2px solid;
+    }
+
+    .student-number-badge {
+      background: #ffffff;
+      color: #1976D2;
+      border-color: #1976D2;
+    }
+
+    .student-name-badge {
+      background: #ffffff;
+      color: #34A853;
+      border-color: #34A853;
+    }
+
+    /* 저장된 학생 목록 */
+    .saved-students-container {
+      background: #f8f9fa;
+      border: 1px solid #dee2e6;
+      border-radius: 10px;
+      padding: 1rem;
+      margin-top: 1rem;
+    }
+
+    .student-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 0.8rem;
+      margin: 0.5rem 0;
+      background: white;
+      border-radius: 8px;
+      border: 1px solid #e0e0e0;
+    }
+
+    .student-item:hover {
+      background: #f0f8ff;
+      border-color: #4285F4;
+    }
+
+    .student-info {
+      display: flex;
+      gap: 1rem;
+      align-items: center;
+    }
+
+    .student-actions {
+      display: flex;
+      gap: 0.5rem;
+    }
+
+    .btn-small {
+      padding: 0.3rem 0.8rem;
+      font-size: 0.85rem;
+      border-radius: 6px;
+      border: none;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    .btn-edit {
+      background: #FFC107;
+      color: #212529;
+    }
+
+    .btn-delete {
+      background: #DC3545;
+      color: white;
+    }
+
+    /* 누가기록 생성 옵션 */
+    .generation-options {
+      display: flex;
+      gap: 1rem;
+      margin-top: 0.5rem;
+    }
+
+    .radio-option {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.8rem 1rem;
+      background: #f8f9fa;
+      border: 2px solid #e0e0e0;
+      border-radius: 10px;
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
+
+    .radio-option:hover {
+      background: #e3f2fd;
+      border-color: #4285F4;
+    }
+
+    .radio-option input[type="radio"]:checked + span {
+      font-weight: 600;
+      color: #4285F4;
+    }
+
+    .radio-option input[type="radio"] {
+      margin: 0;
+    }
+
+    .button-group {
+      display: flex;
+      gap: 0.5rem;
+      margin-bottom: 1rem;
+    }
+
+    .button-group .btn {
+      flex: 1;
+    }
+
+    /* 생성된 누가기록 표시 */
+    .record-group {
+      margin-bottom: 1.2rem;
+      border: 1px solid #e0e0e0;
+      border-radius: 12px;
+      overflow: hidden;
+    }
+
+    .record-group h4 {
+      background: linear-gradient(135deg, #4285F4 0%, #34A853 100%);
+      color: white;
+      margin: 0;
+      padding: 1rem;
+      font-size: 1.1rem;
+    }
+
+    .records-container {
+      padding: 1rem;
+    }
+
+    .record-item {
+      margin-bottom: 1rem;
+      border: 1px solid #f0f0f0;
+      border-radius: 8px;
+      overflow: hidden;
+    }
+
+    .record-header {
+      background: #f8f9fa;
+      padding: 0.8rem;
+      font-weight: 600;
+      color: #495057;
+      border-bottom: 1px solid #e9ecef;
+    }
+
+    .record-content {
+      padding: 1rem;
+      line-height: 1.6;
+      color: #333;
+      white-space: normal;
+    }
+
+    /* 미리보기 */
+    .preview-box {
+      background: linear-gradient(135deg, #f8f9fa 0%, #ffffff 100%);
+      border: 2px solid #e0e0e0;
+      border-radius: 15px;
+      padding: 2rem;
+      margin-top: 1.5rem;
+      min-height: 150px;
+      white-space: normal;
+      line-height: 1.8;
+      font-size: 1.1rem;
+      position: relative;
+    }
+
+    .preview-box.has-content {
+      background: linear-gradient(135deg, #e8f5e8 0%, #f0f8ff 100%);
+      border-color: #34A853;
+    }
+
+    .copy-button {
+      position: absolute;
+      top: 1rem;
+      right: 1rem;
+      background: #4285F4;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      padding: 0.5rem 1rem;
+      cursor: pointer;
+      font-size: 0.9rem;
+      transition: all 0.2s ease;
+    }
+
+    .copy-button:hover {
+      background: #1976D2;
+      transform: scale(1.05);
+    }
+
+    /* 알림 */
+    .alert {
+      padding: 1.5rem;
+      border-radius: 12px;
+      margin-bottom: 1.5rem;
+      border-left: 5px solid;
+      font-weight: 500;
+    }
+
+    .alert-success {
+      background: #d4edda;
+      border-color: #28a745;
+      color: #155724;
+    }
+
+    .alert-info {
+      background: #d1ecf1;
+      border-color: #17a2b8;
+      color: #0c5460;
+    }
+
+    .alert-warning {
+      background: #fff3cd;
+      border-color: #ffc107;
+      color: #856404;
+    }
+
+    /* NEIS 규정 표시 */
+    .compliance-status {
+      background: white;
+      border: 2px solid #e0e0e0;
+      border-radius: 12px;
+      padding: 1.5rem;
+      margin-top: 1rem;
+    }
+
+    .compliance-item {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      margin-bottom: 0.5rem;
+    }
+
+    .compliance-icon {
+      width: 20px;
+      height: 20px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      font-size: 0.8rem;
+      font-weight: bold;
+    }
+
+    .compliance-icon.pass {
+      background: #28a745;
+    }
+
+    .compliance-icon.fail {
+      background: #dc3545;
+    }
+
+    /* 로딩 */
+    .loading {
+      text-align: center;
+      padding: 3rem;
+      color: #666;
+    }
+
+    .loading::after {
+      content: '';
+      display: inline-block;
+      width: 30px;
+      height: 30px;
+      border: 3px solid #ddd;
+      border-radius: 50%;
+      border-top-color: #4285F4;
+      animation: spin 1s linear infinite;
+      margin-left: 1rem;
+    }
+
+    /* 향상된 로딩 상태 */
+    .loading-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(255, 255, 255, 0.95);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      z-index: 10000;
+      font-size: 1.2rem;
+      color: #333;
+    }
+
+    .loading-spinner {
+      display: inline-block;
+      width: 50px;
+      height: 50px;
+      border: 4px solid #f3f3f3;
+      border-top: 4px solid #4285F4;
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+      margin-right: 1rem;
+    }
+
+    .loading-progress {
+      background: #f8f9fa;
+      border: 2px solid #e9ecef;
+      border-radius: 15px;
+      padding: 1.5rem;
+      margin: 1rem 0;
+      text-align: center;
+      font-size: 1.1rem;
+      color: #495057;
+    }
+
+    .loading-progress .progress-bar {
+      background: #e9ecef;
+      height: 8px;
+      border-radius: 4px;
+      overflow: hidden;
+      margin: 1rem 0;
+    }
+
+    .loading-progress .progress-fill {
+      background: linear-gradient(90deg, #4285F4, #34A853);
+      height: 100%;
+      border-radius: 4px;
+      animation: loading-progress 2s ease-in-out infinite;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    @keyframes loading-progress {
+      0% { width: 0%; }
+      50% { width: 100%; }
+      100% { width: 0%; }
+    }
+
+    /* 반응형 디자인 */
+    @media (max-width: 768px) {
+      .container {
+        padding: 1rem;
+      }
+      
+      .header h1 {
+        font-size: 2rem;
+      }
+      
+      .keyword-grid {
+        grid-template-columns: 1fr;
+      }
+      
+      .search-container {
+        flex-direction: column;
+      }
+      
+      .statistics {
+        min-width: 100%;
+      }
+      
+      .btn {
+        width: 100%;
+        justify-content: center;
+        margin-right: 0;
+      }
+    }
+
+    .hidden {
+      display: none !important;
+    }
+
+    /* 애니메이션 */
+    .fade-in {
+      animation: fadeIn 0.5s ease;
+    }
+
+    @keyframes fadeIn {
+      from {
+        opacity: 0;
+        transform: translateY(20px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    /* AI 설정 관련 스타일 */
+    .ai-info {
+      margin-bottom: 2rem;
+    }
+
+    .info-card {
+      background: linear-gradient(135deg, #e8f4fd 0%, #f0f8ff 100%);
+      border: 2px solid #4285F4;
+      border-radius: 15px;
+      padding: 1.5rem;
+    }
+
+    .info-card h4 {
+      color: #4285F4;
+      margin-bottom: 1rem;
+      font-size: 1.2rem;
+    }
+
+    .info-card ul {
+      margin: 1rem 0;
+      padding-left: 1.5rem;
+    }
+
+    .info-card li {
+      margin: 0.5rem 0;
+      color: #666;
+    }
+
+    .api-key-container {
+      display: flex;
+      gap: 0.5rem;
+      align-items: center;
+    }
+
+    .api-key-container .form-input {
+      flex: 1;
+    }
+
+    .form-help {
+      margin-top: 0.5rem;
+    }
+
+    .form-help small {
+      color: #666;
+      font-size: 0.9rem;
+    }
+
+    .form-help a {
+      color: #4285F4;
+      text-decoration: none;
+    }
+
+    .form-help a:hover {
+      text-decoration: underline;
+    }
+
+    .api-key-actions {
+      display: flex;
+      gap: 1rem;
+      margin: 1.5rem 0;
+      flex-wrap: wrap;
+    }
+
+    .api-status {
+      background: #f8f9fa;
+      border-radius: 10px;
+      padding: 1rem;
+      margin-top: 1rem;
+    }
+
+    .status-indicator {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .status-dot {
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      background: #6c757d;
+    }
+
+    .status-indicator.connected .status-dot {
+      background: #28a745;
+      animation: pulse 2s infinite;
+    }
+
+    .status-indicator.error .status-dot {
+      background: #dc3545;
+    }
+
+    .status-indicator.testing .status-dot {
+      background: #ffc107;
+      animation: pulse 1s infinite;
+    }
+
+    @keyframes pulse {
+      0% { opacity: 1; }
+      50% { opacity: 0.5; }
+      100% { opacity: 1; }
+    }
+
+    .usage-stats {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+      gap: 1rem;
+      margin: 1.5rem 0;
+    }
+
+    .usage-card {
+      background: linear-gradient(135deg, #fff3cd 0%, #ffeaa7 100%);
+      border: 2px solid #ffc107;
+      border-radius: 15px;
+      padding: 1.5rem;
+      text-align: center;
+    }
+
+    .usage-number {
+      font-size: 2rem;
+      font-weight: 700;
+      color: #856404;
+      margin-bottom: 0.5rem;
+    }
+
+    .usage-label {
+      color: #856404;
+      font-size: 0.9rem;
+      font-weight: 500;
+    }
+
+    .usage-tips {
+      background: #d4edda;
+      border: 2px solid #28a745;
+      border-radius: 15px;
+      padding: 1.5rem;
+      margin-top: 1.5rem;
+    }
+
+    .usage-tips h4 {
+      color: #155724;
+      margin-bottom: 1rem;
+    }
+
+    .usage-tips ul {
+      margin: 0;
+      padding-left: 1.5rem;
+    }
+
+    .usage-tips li {
+      margin: 0.5rem 0;
+      color: #155724;
+    }
+
+    .required {
+      color: #dc3545;
+      margin-left: 0.25rem;
+    }
+
+    /* 반응형 AI 설정 */
+    @media (max-width: 768px) {
+      .api-key-actions {
+        flex-direction: column;
+      }
+      
+      .usage-stats {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <h1>
+        📊 행동특성 및 종합의견 + 누가기록 생성기
+        <span class="complete-badge">Complete System</span>
+      </h1>
+      <p>키워드 중심의 학생 관찰 기록 시스템</p>
+      <div style="margin-top: 1rem; padding: 0.8rem; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border-radius: 15px; box-shadow: 0 4px 15px rgba(0,0,0,0.1);">
+        <p style="font-size: 1rem; margin: 0; font-weight: 500;">
+          🎓 개발자: <strong>김문정(박달초)</strong> | 
+          📺 유튜브: <a href="https://www.youtube.com/@%EB%B0%B0%EC%9B%80%EC%9D%98%EB%8B%AC%EC%9D%B8-p5v" target="_blank" style="color: #FFE082; text-decoration: none; font-weight: 600; border-bottom: 1px solid #FFE082;">배움의달인</a>
+        </p>
+      </div>
+    </div>
+
+    <div class="workspace-info">
+      <h3>🔗 Google Sheets 워크스페이스</h3>
+      <p>모든 데이터가 자동으로 Google Sheets에 저장됩니다.</p>
+      <div class="workspace-actions">
+        <button class="btn btn-primary" onclick="createWorkspace()">
+          ✨ 새 워크스페이스 생성
+        </button>
+        <button class="btn btn-secondary" onclick="openSampleWorkspace()">
+          📋 샘플 워크스페이스 보기
+        </button>
+      </div>
+    </div>
+
+    <!-- 탭 네비게이션 -->
+    <div class="tab-container">
+      <button class="tab-button active" onclick="showTab('settings')">
+        ⚙️ AI 설정
+      </button>
+      <button class="tab-button" onclick="showTab('behavior')">
+        🎯 행동특성 및 종합의견
+      </button>
+      <button class="tab-button" onclick="showTab('records')">
+        📋 누가기록 생성
+      </button>
+      <button class="tab-button" onclick="showTab('management')">
+        👥 학생 관리
+      </button>
+    </div>
+
+    <!-- 행동특성 및 종합의견 탭 -->
+    <div id="behavior-tab" class="tab-content">
+      <!-- 학생 정보 입력 섹션 -->
+      <div class="section">
+        <div class="section-title">
+          👨‍🎓 학생 정보 입력
+        </div>
+        
+        <div class="student-form-container">
+          <div class="form-row">
+            <div class="form-group" style="flex: 1; margin-right: 1rem;">
+              <label class="form-label" for="studentNumber">학생 번호</label>
+              <input type="number" id="studentNumber" class="form-input" placeholder="예: 1" min="1" max="50">
+            </div>
+            <div class="form-group" style="flex: 2;">
+              <label class="form-label" for="studentName">학생 이름</label>
+              <input type="text" id="studentName" class="form-input" placeholder="예: 홍길동">
+            </div>
+          </div>
+          
+          <div class="student-info-display" id="studentInfoDisplay" style="display: none;">
+            <div class="info-badge">
+              <span class="student-number-badge"></span>
+              <span class="student-name-badge"></span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="section">
+        <div class="section-title">
+          🔍 키워드 검색 및 선택
+        </div>
+
+        <div class="search-container">
+          <div class="search-box">
+            <div class="search-icon">🔍</div>
+            <input type="text" class="search-input" placeholder="키워드 검색..." id="keywordSearch">
+          </div>
+          <div class="statistics">
+            <div class="stat-card">
+              <div class="stat-number" id="selectedCount">0</div>
+              <div class="stat-label">선택됨</div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-number" id="visibleCount">63</div>
+              <div class="stat-label">표시됨</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="selected-keywords">
+          <h4>선택된 키워드</h4>
+          <div class="keyword-badges" id="selectedKeywords">
+            <span style="color: #999;">키워드를 선택하면 여기에 표시됩니다.</span>
+          </div>
+        </div>
+
+        <div class="category-filters">
+          <button class="category-filter active" onclick="filterCategory('all')">전체 (63)</button>
+          <button class="category-filter" onclick="filterCategory('learning_attitude')">학습태도 (10)</button>
+          <button class="category-filter" onclick="filterCategory('social_skills')">대인관계 (10)</button>
+          <button class="category-filter" onclick="filterCategory('cognitive_abilities')">학습능력 (10)</button>
+          <button class="category-filter" onclick="filterCategory('participation_level')">참여도 (10)</button>
+          <button class="category-filter" onclick="filterCategory('character_traits')">성격특성 (10)</button>
+          <button class="category-filter" onclick="filterCategory('special_talents')">특기사항 (10)</button>
+        </div>
+
+        <div class="keyword-grid" id="keywordGrid">
+          <div class="loading">키워드 데이터를 불러오는 중...</div>
+        </div>
+      </div>
+
+      <div class="section">
+        <div class="section-title">
+          ✍️ 맞춤형 입력
+        </div>
+        
+        <div class="form-group">
+          <label class="form-label">관찰 상황</label>
+          <input type="text" class="form-input" id="observationContext" placeholder="예: 수업 시간, 모둠 활동, 발표 시간 등">
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">학급 활동</label>
+          <input type="text" class="form-input" id="classActivity" placeholder="예: 토론 활동, 프로젝트 수행, 체험 활동 등">
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">특별 프로그램</label>
+          <input type="text" class="form-input" id="specialProgram" placeholder="예: 독서 활동, 봉사 활동, 창체 활동 등">
+        </div>
+
+        <button class="btn btn-primary" id="generateBtn" onclick="generateBehaviorText()">
+          ✨ 행동특성 텍스트 생성
+        </button>
+        <button class="btn btn-success" onclick="saveBehaviorText()">
+          💾 Google Sheets 저장
+        </button>
+        <button class="btn btn-warning" onclick="clearSelection()">
+          🗑️ 선택 초기화
+        </button>
+      </div>
+
+      <div class="section">
+        <div class="section-title">
+          ✍️ 행동특성 및 종합의견 (AI 생성 및 수동 편집)
+        </div>
+        <div class="textarea-container" style="position: relative;">
+          <textarea class="form-input form-textarea preview-box" id="behaviorPreview" 
+                    placeholder="키워드를 선택하고 '행동특성 생성' 버튼을 누르거나, 여기에 직접 내용을 입력하세요." 
+                    style="min-height: 180px; resize: vertical; padding-right: 50px; line-height: 1.6;"
+                    oninput="updatePreviewFromTextarea()">
+          </textarea>
+          <button class="copy-button-overlay" onclick="copyToClipboard('behaviorPreview')" title="내용 복사" 
+                  style="position: absolute; top: 10px; right: 10px; background: rgba(66, 133, 244, 0.9); color: white; border: none; border-radius: 6px; padding: 8px 12px; cursor: pointer; font-size: 14px; z-index: 10;">
+            📋
+          </button>
+        </div>
+        <div class="textarea-tools" style="margin-top: 0.5rem; display: flex; gap: 1rem; align-items: center; font-size: 0.85rem; color: #666;">
+          <span id="charCountDisplay">0자</span>
+          <button class="btn-small" onclick="clearBehaviorText()" style="padding: 4px 8px; font-size: 0.8rem;">🗑️ 지우기</button>
+          <button class="btn-small" onclick="formatBehaviorText()" style="padding: 4px 8px; font-size: 0.8rem;">📝 정리</button>
+        </div>
+        
+        <div class="compliance-status hidden" id="complianceStatus">
+          <h4 style="margin-bottom: 1rem;">📋 NEIS 규정 준수 검사</h4>
+          <div class="compliance-item">
+            <div class="compliance-icon" id="lengthIcon">📏</div>
+            <span id="lengthCheck">글자 수: 0/500자</span>
+          </div>
+          <div class="compliance-item">
+            <div class="compliance-icon" id="endingIcon">✍️</div>
+            <span id="endingCheck">명사형 종결 확인</span>
+          </div>
+          <div class="compliance-item">
+            <div class="compliance-icon" id="contentIcon">🚫</div>
+            <span id="contentCheck">금지 내용 확인</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 누가기록 생성 탭 -->
+    <div id="records-tab" class="tab-content">
+      <div class="section">
+        <div class="section-title">
+          📋 누가기록 생성
+        </div>
+        
+        <div class="alert alert-info">
+          <strong>💡 사용법:</strong> 먼저 "행동특성 및 종합의견" 탭에서 텍스트를 생성한 후, 여기서 누가기록을 생성하세요.
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">생성된 행동특성 텍스트</label>
+          <div class="textarea-container">
+            <textarea class="form-input form-textarea" id="behaviorTextInput" placeholder="행동특성 탭에서 생성된 텍스트가 여기에 자동으로 표시됩니다." readonly></textarea>
+            <button class="copy-button-overlay" onclick="copyToClipboard('behaviorTextInput')" title="행동특성 텍스트 복사">
+              📋
+            </button>
+          </div>
+        </div>
+
+        <!-- 저장된 학생 목록 관리 -->
+        <div class="form-group">
+          <label class="form-label">📚 저장된 학생 목록</label>
+          <div class="saved-students-container" id="savedStudentsContainer">
+            <div id="noStudentsMessage" style="text-align: center; color: #666; padding: 2rem;">
+              아직 저장된 학생이 없습니다.<br>
+              행동특성 탭에서 학생별로 행동특성을 생성해주세요.
+            </div>
+            <div id="studentsList" style="display: none;"></div>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">누가기록 생성 방식</label>
+          <div class="generation-options">
+            <label class="radio-option">
+              <input type="radio" name="generationType" value="all" checked>
+              <span>전체 학생 누가기록 생성</span>
+            </label>
+            <label class="radio-option">
+              <input type="radio" name="generationType" value="selected">
+              <span>선택한 학생만 생성</span>
+            </label>
+          </div>
+        </div>
+
+        <!-- 날짜 설정 -->
+        <div class="form-group">
+          <label class="form-label">📅 누가기록 날짜 설정</label>
+          <div style="background: #f8f9fa; border: 2px solid #dee2e6; border-radius: 12px; padding: 1.5rem; margin-bottom: 1rem;">
+            <div style="display: grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap: 1rem; align-items: end;">
+              <div>
+                <label class="form-label" style="font-size: 0.9rem; margin-bottom: 0.5rem;">년도</label>
+                <input type="number" class="form-input" id="recordYear" value="2025" min="2020" max="2030" style="padding: 0.7rem; font-size: 0.9rem;">
+              </div>
+              <div>
+                <label class="form-label" style="font-size: 0.9rem; margin-bottom: 0.5rem;">시작월</label>
+                <select class="form-input" id="recordStartMonth" style="padding: 0.7rem; font-size: 0.9rem;">
+                  <option value="1">1월</option>
+                  <option value="2">2월</option>
+                  <option value="3" selected>3월</option>
+                  <option value="4">4월</option>
+                  <option value="5">5월</option>
+                  <option value="6">6월</option>
+                  <option value="7">7월</option>
+                  <option value="8">8월</option>
+                  <option value="9">9월</option>
+                  <option value="10">10월</option>
+                  <option value="11">11월</option>
+                  <option value="12">12월</option>
+                </select>
+              </div>
+              <div>
+                <label class="form-label" style="font-size: 0.9rem; margin-bottom: 0.5rem;">종료월</label>
+                <select class="form-input" id="recordEndMonth" style="padding: 0.7rem; font-size: 0.9rem;">
+                  <option value="1">1월</option>
+                  <option value="2">2월</option>
+                  <option value="3">3월</option>
+                  <option value="4">4월</option>
+                  <option value="5">5월</option>
+                  <option value="6">6월</option>
+                  <option value="7" selected>7월</option>
+                  <option value="8">8월</option>
+                  <option value="9">9월</option>
+                  <option value="10">10월</option>
+                  <option value="11">11월</option>
+                  <option value="12">12월</option>
+                </select>
+              </div>
+              <div>
+                <label class="form-label" style="font-size: 0.9rem; margin-bottom: 0.5rem;">생성 개수</label>
+                <input type="number" class="form-input" id="recordCount" value="5" min="1" max="20" style="padding: 0.7rem; font-size: 0.9rem;">
+              </div>
+            </div>
+            <div style="margin-top: 1rem; padding: 0.8rem; background: #e3f2fd; border-radius: 8px; font-size: 0.85rem; color: #1976d2;">
+              📝 <strong>안내:</strong> 설정한 기간의 평일(월~금) 중 공휴일을 제외한 날짜에서 랜덤으로 선택하여 누가기록을 생성합니다.
+            </div>
+          </div>
+        </div>
+
+        <div class="button-group">
+          <button class="btn btn-primary" onclick="generateStudentRecords()">
+            📝 누가기록 생성
+          </button>
+          <button class="btn btn-info" onclick="refreshStudentsList()">
+            🔄 학생 목록 새로고침
+          </button>
+        </div>
+        <button class="btn btn-success" onclick="saveRecords()">
+          💾 Google Sheets 저장
+        </button>
+        <button class="btn btn-warning" onclick="exportRecords()">
+          📤 Excel 내보내기
+        </button>
+      </div>
+
+      <div class="section">
+        <div class="section-title">
+          📋 생성된 누가기록
+          <button class="btn btn-secondary btn-sm" id="copyAllRecordsBtn" onclick="copyAllRecords()" style="display: none; margin-left: 1rem;">
+            📋 전체 복사
+          </button>
+        </div>
+        <div id="recordsList">
+          <div style="text-align: center; padding: 2rem; background: #f8f9fa; border-radius: 12px; margin: 1rem 0;">
+            <p style="color: #666; margin-bottom: 1rem; font-size: 1rem;">누가기록을 생성하면 여기에 표시됩니다.</p>
+            
+            <div style="background: #fff3cd; border: 2px solid #ffc107; border-radius: 8px; padding: 1rem; margin-top: 1rem;">
+              <h4 style="color: #856404; margin: 0 0 0.5rem 0; font-size: 1rem;">⚠️ 다중 학생 생성 시 참고사항</h4>
+              <p style="color: #856404; margin: 0; font-size: 0.9rem; line-height: 1.4;">
+                여러 학생을 한 번에 생성할 때 Rate Limiting으로 인해 일부 실패할 수 있습니다.<br>
+                <strong>권장:</strong> 1-2명씩 나누어 생성하거나, 실패 시 개별 학생으로 재시도해주세요.
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 학생 관리 탭 -->
+    <div id="management-tab" class="tab-content">
+      <div class="section">
+        <div class="section-title">
+          👥 학생 정보 관리
+        </div>
+        
+        <div class="form-group">
+          <label class="form-label">학생 이름</label>
+          <input type="text" class="form-input" id="recordsStudentName" placeholder="학생 이름 입력">
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">학급</label>
+          <input type="text" class="form-input" id="studentClass" placeholder="예: 3학년 1반">
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">학생 번호</label>
+          <input type="text" class="form-input" id="recordsStudentNumber" placeholder="예: 1, 2, 3...">
+        </div>
+
+        <button class="btn btn-primary" onclick="addStudent()">
+          ➕ 학생 추가
+        </button>
+        <button class="btn btn-success" onclick="saveStudentData()">
+          💾 학생 정보 저장
+        </button>
+      </div>
+
+      <div class="section">
+        <div class="section-title">
+          📊 사용 통계
+        </div>
+        <div id="usageStats">
+          <div class="loading">통계 데이터를 불러오는 중...</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- AI 설정 탭 -->
+    <div id="settings-tab" class="tab-content active">
+      <div class="section">
+        <div class="section-title">
+          🤖 GEMINI AI 설정
+        </div>
+        
+        <div class="ai-info">
+          <div style="background: linear-gradient(135deg, #fff5f5 0%, #fff3cd 100%); border: 2px solid #fd7e14; border-radius: 15px; padding: 1.5rem; margin-bottom: 1.5rem; text-align: center;">
+            <h3 style="color: #fd7e14; margin-bottom: 1rem;">⚠️ 필수 설정 안내</h3>
+            <p style="font-size: 1.1rem; font-weight: 600; color: #495057; margin-bottom: 0.5rem;">
+              AI 기능을 사용하려면 <strong>본인의 GEMINI API 키</strong>를 먼저 등록해주세요.
+            </p>
+            <p style="color: #6c757d; font-size: 0.95rem;">
+              API 키 없이는 기본 생성만 가능하며, AI 전문 생성 기능을 사용할 수 없습니다.
+            </p>
+          </div>
+          
+          <div class="info-card">
+            <h4>🚀 AI 기능 안내</h4>
+            <p>GEMINI API를 활용하여 더욱 자연스럽고 전문적인 행동특성 및 누가기록을 생성할 수 있습니다.</p>
+            <ul>
+              <li>✨ 키워드 기반 자연어 생성</li>
+              <li>📝 NEIS 규정 자동 준수</li>
+              <li>🎯 맥락 기반 개인화</li>
+              <li>🔄 안전한 폴백 시스템</li>
+            </ul>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">
+            🔑 GEMINI API 키 (필수)
+            <span class="required">*</span>
+          </label>
+          <div class="api-key-container">
+            <input type="password" class="form-input" id="geminiApiKey" 
+                   placeholder="Google AI Studio에서 발급받은 API 키를 입력하세요">
+            <button class="btn btn-secondary" onclick="toggleApiKeyVisibility()" id="toggleApiKey">
+              👁️ 보기
+            </button>
+          </div>
+          <div class="form-help">
+            <small>
+              💡 API 키 발급: <a href="https://aistudio.google.com/app/apikey" target="_blank">Google AI Studio</a>
+              | 무료 할당량: 월 15회 요청
+            </small>
+          </div>
+        </div>
+
+        <div class="api-key-actions">
+          <button class="btn btn-primary" onclick="testApiKey()">
+            🧪 API 키 테스트
+          </button>
+          <button class="btn btn-success" onclick="saveApiKey()">
+            💾 API 키 저장
+          </button>
+          <button class="btn btn-warning" onclick="clearApiKey()">
+            🗑️ API 키 제거
+          </button>
+        </div>
+
+        <div id="apiStatus" class="api-status">
+          <div class="status-indicator" id="statusIndicator">
+            <span class="status-dot"></span>
+            <span id="statusText">API 키를 입력해주세요</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="section">
+        <div class="section-title">
+          ⚙️ AI 생성 옵션
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">행동특성 생성 스타일</label>
+          <select class="form-input" id="behaviorStyle">
+            <option value="standard">표준형 (교육적 맥락 중심)</option>
+            <option value="detailed">상세형 (구체적 행동 묘사)</option>
+            <option value="simple">간결형 (핵심 내용 위주)</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">누가기록 생성 개수</label>
+          <select class="form-input" id="recordCount">
+            <option value="3">3개</option>
+            <option value="5" selected>5개</option>
+            <option value="7">7개</option>
+            <option value="10">10개</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">
+            <input type="checkbox" id="includeActivities" checked> 
+            다양한 활동 상황 포함
+          </label>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">
+            <input type="checkbox" id="useAiFallback" checked> 
+            AI 실패 시 기본 방식 사용
+          </label>
+        </div>
+      </div>
+
+      <div class="section">
+        <div class="section-title">
+          📊 사용량 모니터링
+        </div>
+        
+        <div class="usage-stats">
+          <div class="usage-card">
+            <div class="usage-number" id="todayUsage">0</div>
+            <div class="usage-label">오늘 사용</div>
+          </div>
+          <div class="usage-card">
+            <div class="usage-number" id="monthUsage">0</div>
+            <div class="usage-label">이번 달 사용</div>
+          </div>
+          <div class="usage-card">
+            <div class="usage-number" id="totalUsage">0</div>
+            <div class="usage-label">총 사용량</div>
+          </div>
+        </div>
+
+        <div class="usage-tips">
+          <h4>💡 사용량 절약 팁</h4>
+          <ul>
+            <li>🎯 키워드 선택을 신중하게 하여 재생성 횟수 줄이기</li>
+            <li>📝 맥락 정보를 상세히 입력하여 첫 번째 생성에서 만족할 만한 결과 얻기</li>
+            <li>🔄 폴백 시스템을 활용하여 AI 호출 횟수 최소화</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // 전역 변수
+    let keywordDatabase = [];
+    let selectedKeywords = [];
+    let currentCategory = 'all';
+    let behaviorText = '';
+    let generatedRecords = [];
+    let currentSpreadsheetId = '';
+    
+    // AI 설정 관련 변수
+    let geminiApiKey = '';
+    let currentCharCount = 500;
+    let currentContentStyle = 'generic';
+    let aiSettings = {
+      behaviorStyle: 'standard',
+      recordCount: 5,
+      includeActivities: true,
+      useAiFallback: true,
+      charCount: 500,
+      contentStyle: 'generic'
+    };
+    let usageStats = {
+      today: 0,
+      month: 0,
+      total: 0
+    };
+
+    // 초기화
+    document.addEventListener('DOMContentLoaded', function() {
+      // 전역 변수 초기화
+      currentCharCount = 500;
+      currentContentStyle = 'generic';
+      console.log('🔥 전역 변수 초기화:', { currentCharCount, currentContentStyle });
+      
+      // localStorage에서 API 키 복원 (플래그 값 제외)
+      try {
+        const storedApiKey = localStorage.getItem('geminiApiKey');
+        if (storedApiKey && storedApiKey.length > 10 && storedApiKey !== 'API_KEY_AVAILABLE' && storedApiKey.startsWith('AIza')) {
+          geminiApiKey = storedApiKey;
+          console.log('✅ localStorage에서 API 키 복원:', storedApiKey.substring(0, 4) + '...');
+        }
+      } catch (error) {
+        console.warn('localStorage API 키 복원 실패:', error);
+      }
+      
+      loadKeywordDatabase();
+      setupEventListeners();
+      
+      // AI 설정 초기화
+      setTimeout(loadAiSettings, 1000);
+      
+      // AI 설정 변경 이벤트 리스너
+      ['behaviorStyle', 'recordCount', 'includeActivities', 'useAiFallback', 'charCountSlider', 'contentStyle'].forEach(id => {
+        const element = document.getElementById(id);
+        if (element) {
+          if (id === 'charCountSlider') {
+            element.addEventListener('input', function() {
+              updateCharCount(this.value);
+            });
+          } else if (id === 'contentStyle') {
+            element.addEventListener('change', function() {
+              currentContentStyle = this.value;
+              aiSettings.contentStyle = this.value;
+              saveAiSettings();
+            });
+          } else {
+            element.addEventListener('change', saveAiSettings);
+          }
+        }
+      });
+    });
+    
+    // 글자수 업데이트 함수
+    function updateCharCount(value) {
+      currentCharCount = parseInt(value);
+      aiSettings.charCount = currentCharCount;
+      document.getElementById('charCountDisplay').textContent = value;
+      
+      // 슬라이더 색상 변경
+      const slider = document.getElementById('charCountSlider');
+      const percentage = ((value - 300) / (600 - 300)) * 100;
+      slider.style.background = `linear-gradient(to right, #4285F4 0%, #4285F4 ${percentage}%, #ddd ${percentage}%, #ddd 100%)`;
+      
+      saveAiSettings();
+    }
+
+    // 키워드 데이터베이스 로드
+    function loadKeywordDatabase() {
+      google.script.run
+        .withSuccessHandler(function(result) {
+          keywordDatabase = result.categories;
+          renderKeywords();
+          updateStatistics();
+        })
+        .withFailureHandler(function(error) {
+          console.error('키워드 데이터베이스 로드 실패:', error);
+          showAlert('키워드 데이터베이스 로드에 실패했습니다.', 'warning');
+        })
+        .getKeywordDatabase();
+    }
+
+    // 이벤트 리스너 설정
+    function setupEventListeners() {
+      // 검색 기능
+      document.getElementById('keywordSearch').addEventListener('input', function(e) {
+        filterKeywords(e.target.value);
+      });
+
+      // 실시간 미리보기
+      ['observationContext', 'classActivity', 'specialProgram'].forEach(id => {
+        document.getElementById(id).addEventListener('input', updatePreview);
+      });
+    }
+
+    // 탭 전환
+    function showTab(tab) {
+      // API 키 미설정 시 경고 (AI 설정 탭 제외)
+      if (tab !== 'settings' && (!geminiApiKey || geminiApiKey === '')) {
+        showAlert('⚠️ AI 기능을 사용하려면 먼저 AI 설정 탭에서 GEMINI API 키를 등록해주세요!', 'warning');
+      }
+      
+      document.querySelectorAll('.tab-button').forEach(btn => btn.classList.remove('active'));
+      document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
+      
+      // 클릭 이벤트에서 호출된 경우에만 event.target 사용
+      if (window.event && window.event.target) {
+        window.event.target.classList.add('active');
+      } else {
+        // JavaScript에서 직접 호출된 경우 탭 버튼 찾기
+        const targetButton = document.querySelector(`[onclick="showTab('${tab}')"]`);
+        if (targetButton) {
+          targetButton.classList.add('active');
+        }
+      }
+      
+      document.getElementById(tab + '-tab').classList.add('active');
+    }
+
+    // 키워드 렌더링
+    function renderKeywords() {
+      const grid = document.getElementById('keywordGrid');
+      grid.innerHTML = '';
+      
+      const filteredCategories = currentCategory === 'all' 
+        ? keywordDatabase 
+        : keywordDatabase.filter(cat => cat.id === currentCategory);
+      
+      filteredCategories.forEach(category => {
+        const categoryDiv = document.createElement('div');
+        categoryDiv.className = 'keyword-category fade-in';
+        categoryDiv.innerHTML = `
+          <div class="category-header" onclick="toggleCategory('${category.id}')">
+            <div class="category-title">${category.name}</div>
+            <div class="category-count">${category.keywords.length}개</div>
+          </div>
+          <div class="keyword-list" id="list-${category.id}">
+            ${category.keywords.map(keyword => `
+              <div class="keyword-item" data-keyword="${keyword.id}" data-category="${category.id}">
+                <input type="checkbox" class="keyword-checkbox" id="${keyword.id}" 
+                       onchange="toggleKeyword('${keyword.id}', '${category.id}')">
+                <label class="keyword-label" for="${keyword.id}" title="${keyword.description}">
+                  ${keyword.text}
+                </label>
+                <div class="keyword-intensity">
+                  <button class="intensity-btn ${keyword.intensity === 1 ? 'active' : ''}" 
+                          onclick="setIntensity('${keyword.id}', 1)">약간</button>
+                  <button class="intensity-btn ${keyword.intensity === 2 ? 'active' : ''}" 
+                          onclick="setIntensity('${keyword.id}', 2)">보통</button>
+                  <button class="intensity-btn ${keyword.intensity === 3 ? 'active' : ''}" 
+                          onclick="setIntensity('${keyword.id}', 3)">매우</button>
+                </div>
+              </div>
+            `).join('')}
+          </div>
+        `;
+        grid.appendChild(categoryDiv);
+      });
+    }
+
+    // 카테고리 토글
+    function toggleCategory(categoryId) {
+      const list = document.getElementById(`list-${categoryId}`);
+      list.classList.toggle('collapsed');
+    }
+
+    // 카테고리 필터
+    function filterCategory(category) {
+      currentCategory = category;
+      
+      // 필터 버튼 활성화
+      document.querySelectorAll('.category-filter').forEach(btn => btn.classList.remove('active'));
+      event.target.classList.add('active');
+      
+      renderKeywords();
+      updateStatistics();
+    }
+
+    // 키워드 검색
+    function filterKeywords(searchTerm) {
+      const items = document.querySelectorAll('.keyword-item');
+      let visibleCount = 0;
+      
+      items.forEach(item => {
+        const text = item.textContent.toLowerCase();
+        if (text.includes(searchTerm.toLowerCase())) {
+          item.style.display = 'flex';
+          visibleCount++;
+        } else {
+          item.style.display = 'none';
+        }
+      });
+      
+      document.getElementById('visibleCount').textContent = visibleCount;
+    }
+
+    // 키워드 토글
+    function toggleKeyword(keywordId, categoryId) {
+      const checkbox = document.getElementById(keywordId);
+      const category = keywordDatabase.find(cat => cat.id === categoryId);
+      const keyword = category.keywords.find(k => k.id === keywordId);
+      
+      if (checkbox.checked) {
+        // 키워드 추가
+        const selectedKeyword = {
+          id: keywordId,
+          keywordId: keywordId,  // Code.gs에서 찾는 필드 추가
+          categoryId: categoryId,
+          text: keyword.text,
+          autoText: keyword.autoText,
+          intensity: 2, // 기본값
+          color: category.color,
+          context: ''  // 맥락 정보 필드 추가
+        };
+        selectedKeywords.push(selectedKeyword);
+      } else {
+        // 키워드 제거
+        selectedKeywords = selectedKeywords.filter(k => k.id !== keywordId);
+      }
+      
+      updateSelectedKeywords();
+      updateStatistics();
+      updatePreview();
+    }
+
+    // 강도 설정
+    function setIntensity(keywordId, intensity) {
+      const keyword = selectedKeywords.find(k => k.id === keywordId);
+      if (keyword) {
+        keyword.intensity = intensity;
+      }
+      
+      // UI 업데이트
+      const keywordItem = document.querySelector(`[data-keyword="${keywordId}"]`);
+      keywordItem.querySelectorAll('.intensity-btn').forEach(btn => btn.classList.remove('active'));
+      keywordItem.querySelector(`.intensity-btn:nth-child(${intensity})`).classList.add('active');
+      
+      updateSelectedKeywords();
+      updatePreview();
+    }
+
+    // 선택된 키워드 업데이트
+    function updateSelectedKeywords() {
+      const container = document.getElementById('selectedKeywords');
+      
+      if (selectedKeywords.length === 0) {
+        container.innerHTML = '<span style="color: #999;">키워드를 선택하면 여기에 표시됩니다.</span>';
+        return;
+      }
+      
+      container.innerHTML = selectedKeywords.map(keyword => {
+        const intensityText = ['', '약간', '보통', '매우'][keyword.intensity];
+        return `
+          <div class="keyword-badge" style="background-color: ${keyword.color}">
+            ${keyword.text}
+            <span class="intensity">${intensityText}</span>
+            <span class="remove" onclick="removeKeyword('${keyword.id}')">×</span>
+          </div>
+        `;
+      }).join('');
+    }
+
+    // 키워드 제거
+    function removeKeyword(keywordId) {
+      document.getElementById(keywordId).checked = false;
+      selectedKeywords = selectedKeywords.filter(k => k.id !== keywordId);
+      updateSelectedKeywords();
+      updateStatistics();
+      updatePreview();
+    }
+
+    // 통계 업데이트
+    function updateStatistics() {
+      document.getElementById('selectedCount').textContent = selectedKeywords.length;
+      
+      const visibleItems = document.querySelectorAll('.keyword-item:not([style*="display: none"])');
+      document.getElementById('visibleCount').textContent = visibleItems.length;
+    }
+
+    // 미리보기 업데이트 (null 체크 추가)
+    function updatePreview() {
+      const previewBox = document.getElementById('behaviorPreview');
+      const copyBtn = document.getElementById('copyPreviewBtn');
+      const complianceStatus = document.getElementById('complianceStatus');
+      
+      // null 체크 추가
+      if (!previewBox) {
+        console.warn('behaviorPreview 요소를 찾을 수 없습니다.');
+        return;
+      }
+      
+      if (selectedKeywords.length === 0) {
+        previewBox.textContent = '키워드를 선택하면 실시간으로 미리보기가 생성됩니다.';
+        previewBox.classList.remove('has-content', 'ai-generated', 'basic-generated');
+        if (copyBtn) copyBtn.classList.add('hidden');
+        if (complianceStatus) complianceStatus.classList.add('hidden');
+        return;
+      }
+
+      // 카테고리별 키워드 그룹화
+      const keywordsByCategory = selectedKeywords.reduce((acc, sk) => {
+        if (!acc[sk.categoryId]) acc[sk.categoryId] = [];
+        acc[sk.categoryId].push(sk);
+        return acc;
+      }, {});
+
+      // 텍스트 생성
+      const sentences = [];
+      Object.entries(keywordsByCategory).forEach(([categoryId, keywords]) => {
+        const keywordTexts = keywords.map(sk => {
+          const intensityModifiers = {
+            1: { prefix: '약간', suffix: '' },
+            2: { prefix: '', suffix: '' },
+            3: { prefix: '매우', suffix: '' }
+          };
+          
+          const modifier = intensityModifiers[sk.intensity];
+          let text = sk.autoText || sk.text;
+          
+          if (modifier.prefix) {
+            text = `${modifier.prefix} ${text}`;
+          }
+          
+          return text;
+        });
+        
+        sentences.push(keywordTexts.join(', '));
+      });
+
+      // 맥락 정보 추가
+      const context = document.getElementById('observationContext').value;
+      const activity = document.getElementById('classActivity').value;
+      const program = document.getElementById('specialProgram').value;
+
+      let finalText = sentences.join('. ');
+      
+      if (context) finalText += ` ${context}에서`;
+      if (activity) finalText += ` ${activity}을 통해`;
+      if (program) finalText += ` ${program}에 참여하며`;
+      
+      finalText += ' 성장하는 모습을 보임.';
+
+      previewBox.textContent = finalText;
+      if (previewBox) previewBox.classList.add('has-content');
+      if (copyBtn) copyBtn.classList.remove('hidden');
+      
+      // NEIS 규정 검사
+      updateComplianceCheck(finalText);
+      if (complianceStatus) complianceStatus.classList.remove('hidden');
+    }
+
+    // NEIS 규정 검사 (null 체크 추가)
+    function checkCompliance(text) {
+      const lengthOk = text.length <= 500;
+      const endingOk = ['함', '임', '됨', '을 보임', '하는 모습을 보임'].some(ending => text.endsWith(ending));
+      const contentOk = !['학생 이름', '구체적 날짜', '시간 표현'].some(prohibited => text.includes(prohibited));
+      
+      // 길이 검사 (null 체크)
+      const lengthIcon = document.getElementById('lengthIcon');
+      const lengthCheck = document.getElementById('lengthCheck');
+      if (lengthIcon && lengthCheck) {
+        lengthIcon.className = `compliance-icon ${lengthOk ? 'pass' : 'fail'}`;
+        lengthIcon.textContent = lengthOk ? '✓' : '✗';
+        lengthCheck.textContent = `글자 수: ${text.length}/500자 ${lengthOk ? '(적합)' : '(초과)'}`;
+      }
+      
+      // 종결어 검사 (null 체크)
+      const endingIcon = document.getElementById('endingIcon');
+      const endingCheck = document.getElementById('endingCheck');
+      if (endingIcon && endingCheck) {
+        endingIcon.className = `compliance-icon ${endingOk ? 'pass' : 'fail'}`;
+        endingIcon.textContent = endingOk ? '✓' : '✗';
+        endingCheck.textContent = `명사형 종결 ${endingOk ? '(적합)' : '(부적합)'}`;
+      }
+      
+      // 내용 검사 (null 체크)
+      const contentIcon = document.getElementById('contentIcon');
+      const contentCheck = document.getElementById('contentCheck');
+      if (contentIcon && contentCheck) {
+        contentIcon.className = `compliance-icon ${contentOk ? 'pass' : 'fail'}`;
+        contentIcon.textContent = contentOk ? '✓' : '✗';
+        contentCheck.textContent = `금지 내용 ${contentOk ? '없음' : '포함됨'}`;
+      }
+    }
+
+    // 🔥 누락된 updateComplianceIndicators 함수 추가
+    function updateComplianceIndicators(compliance) {
+      if (!compliance) return;
+      
+      // 행동발달 및 특기사항 탭의 규정 검사 결과 업데이트
+      const behaviorComplianceEl = document.querySelector('#behavior-tab .compliance-check');
+      if (behaviorComplianceEl) {
+        const isCompliant = compliance.lengthOk && compliance.endingOk && compliance.contentOk;
+        behaviorComplianceEl.className = `compliance-check ${isCompliant ? 'compliant' : 'non-compliant'}`;
+        behaviorComplianceEl.innerHTML = `
+          <div class="compliance-item">
+            <span class="compliance-icon ${compliance.lengthOk ? 'pass' : 'fail'}">${compliance.lengthOk ? '✓' : '✗'}</span>
+            글자 수: ${compliance.length || 0}/500자 ${compliance.lengthOk ? '(적합)' : '(초과)'}
+          </div>
+          <div class="compliance-item">
+            <span class="compliance-icon ${compliance.endingOk ? 'pass' : 'fail'}">${compliance.endingOk ? '✓' : '✗'}</span>
+            명사형 종결 ${compliance.endingOk ? '(적합)' : '(부적합)'}
+          </div>
+          <div class="compliance-item">
+            <span class="compliance-icon ${compliance.contentOk ? 'pass' : 'fail'}">${compliance.contentOk ? '✓' : '✗'}</span>
+            금지 내용 ${compliance.contentOk ? '없음' : '포함됨'}
+          </div>
+        `;
+      }
+    }
+
+    // 👨‍🎓 학생 정보 관리 시스템
+    let savedStudents = {}; // {studentId: {number, name, behaviorText, compliance, keywords}}
+    
+    // 학생 정보 입력 이벤트 리스너
+    function initializeStudentForm() {
+      const studentNumberInput = document.getElementById('studentNumber');
+      const studentNameInput = document.getElementById('studentName');
+      
+      if (studentNumberInput && studentNameInput) {
+        studentNumberInput.addEventListener('input', updateStudentInfo);
+        studentNameInput.addEventListener('input', updateStudentInfo);
+      }
+    }
+    
+    // 학생 정보 업데이트 및 표시
+    function updateStudentInfo() {
+      const studentNumber = document.getElementById('studentNumber').value;
+      const studentName = document.getElementById('studentName').value;
+      const display = document.getElementById('studentInfoDisplay');
+      
+      if (studentNumber && studentName) {
+        display.style.display = 'block';
+        display.querySelector('.student-number-badge').textContent = `${studentNumber}번`;
+        display.querySelector('.student-name-badge').textContent = studentName;
+      } else {
+        display.style.display = 'none';
+      }
+    }
+    
+    // 현재 학생 정보 가져오기
+    function getCurrentStudentInfo() {
+      const studentNumber = document.getElementById('studentNumber').value;
+      const studentName = document.getElementById('studentName').value;
+      
+      if (!studentNumber || !studentName) {
+        showAlert('학생 번호와 이름을 입력해주세요.', 'warning');
+        return null;
+      }
+      
+      return {
+        number: parseInt(studentNumber),
+        name: studentName.trim(),
+        id: `${studentNumber}_${studentName.trim()}`
+      };
+    }
+    
+    // 학생별 행동특성 저장
+    function saveStudentBehaviorData(studentInfo, behaviorText, compliance = null, keywords = []) {
+      if (!studentInfo || !behaviorText) return false;
+      
+      savedStudents[studentInfo.id] = {
+        number: studentInfo.number,
+        name: studentInfo.name,
+        behaviorText: behaviorText,
+        compliance: compliance,
+        keywords: keywords,
+        savedAt: new Date().toISOString()
+      };
+      
+      // 로컬 스토리지에 저장
+      localStorage.setItem('nugabar_saved_students', JSON.stringify(savedStudents));
+      
+      console.log(`✅ 학생 데이터 저장 완료: ${studentInfo.name} (${studentInfo.number}번)`);
+      return true;
+    }
+    
+    // 저장된 학생 데이터 로드
+    function loadSavedStudents() {
+      try {
+        const saved = localStorage.getItem('nugabar_saved_students');
+        if (saved) {
+          savedStudents = JSON.parse(saved);
+          console.log(`📚 저장된 학생 데이터 로드: ${Object.keys(savedStudents).length}명`);
+        }
+      } catch (error) {
+        console.error('저장된 학생 데이터 로드 오류:', error);
+        savedStudents = {};
+      }
+    }
+    
+    // 저장된 학생 목록 표시
+    function displaySavedStudents() {
+      // 누가기록 탭에 저장된 학생 목록 표시용 함수
+      return Object.values(savedStudents).sort((a, b) => a.number - b.number);
+    }
+    
+    // 📚 누가기록 탭 - 학생 목록 표시 및 관리
+    function refreshStudentsList() {
+      const container = document.getElementById('savedStudentsContainer');
+      const noMessage = document.getElementById('noStudentsMessage');
+      const studentsList = document.getElementById('studentsList');
+      
+      if (!container) return;
+      
+      const students = Object.values(savedStudents).sort((a, b) => a.number - b.number);
+      
+      if (students.length === 0) {
+        noMessage.style.display = 'block';
+        studentsList.style.display = 'none';
+        return;
+      }
+      
+      noMessage.style.display = 'none';
+      studentsList.style.display = 'block';
+      
+      studentsList.innerHTML = students.map(student => `
+        <div class="student-item" data-student-id="${student.number}_${student.name}">
+          <div class="student-info">
+            <input type="checkbox" class="student-checkbox" value="${student.number}_${student.name}" checked>
+            <span class="student-number-badge">${student.number}번</span>
+            <span class="student-name-badge">${student.name}</span>
+            <small style="color: #666;">
+              저장일: ${new Date(student.savedAt).toLocaleDateString()}
+            </small>
+          </div>
+          <div class="student-actions">
+            <button class="btn-small btn-edit" onclick="editStudentData('${student.number}_${student.name}')">수정</button>
+            <button class="btn-small btn-delete" onclick="deleteStudentData('${student.number}_${student.name}')">삭제</button>
+          </div>
+        </div>
+      `).join('');
+      
+      console.log(`📚 학생 목록 새로고침 완료: ${students.length}명`);
+    }
+    
+    // 학생 데이터 삭제
+    function deleteStudentData(studentId) {
+      if (!confirm('이 학생의 데이터를 삭제하시겠습니까?')) return;
+      
+      delete savedStudents[studentId];
+      localStorage.setItem('nugabar_saved_students', JSON.stringify(savedStudents));
+      refreshStudentsList();
+      showAlert('학생 데이터가 삭제되었습니다.', 'info');
+    }
+    
+    // 학생 데이터 편집 (향후 구현)
+    function editStudentData(studentId) {
+      showAlert('편집 기능은 향후 업데이트에서 제공될 예정입니다.', 'info');
+    }
+    
+    // 선택된 학생들 가져오기
+    function getSelectedStudents() {
+      const generationType = document.querySelector('input[name="generationType"]:checked').value;
+      
+      if (generationType === 'all') {
+        return Object.values(savedStudents).sort((a, b) => a.number - b.number);
+      } else {
+        const checkboxes = document.querySelectorAll('.student-checkbox:checked');
+        const selectedIds = Array.from(checkboxes).map(cb => cb.value);
+        return selectedIds.map(id => savedStudents[id]).filter(Boolean);
+      }
+    }
+    
+    // 학생별 누가기록 생성
+    function generateStudentRecords() {
+      const selectedStudents = getSelectedStudents();
+      
+      if (selectedStudents.length === 0) {
+        showAlert('생성할 학생을 선택해주세요.', 'warning');
+        return;
+      }
+      
+      // API 키 상태 확인 (백엔드에서 관리)
+      if (!geminiApiKey || geminiApiKey === '') {
+        showAlert('GEMINI API 키가 설정되지 않았습니다. AI 설정 탭에서 API 키를 먼저 설정해주세요.', 'error');
+        return;
+      }
+      
+      console.log('🔐 API 키 상태 확인 완료 - 백엔드에서 관리됨');
+      
+      const recordCount = parseInt(document.getElementById('recordCount').value) || 5;
+      
+      // 날짜 설정 가져오기
+      const dateSettings = {
+        year: parseInt(document.getElementById('recordYear').value) || 2025,
+        startMonth: parseInt(document.getElementById('recordStartMonth').value) || 3,
+        endMonth: parseInt(document.getElementById('recordEndMonth').value) || 7
+      };
+      
+      console.log(`📝 누가기록 생성 시작: ${selectedStudents.length}명, 각 ${recordCount}개`);
+      console.log('📝 선택된 학생 데이터:', selectedStudents);
+      console.log(`📅 날짜 설정: ${dateSettings.year}년 ${dateSettings.startMonth}월~${dateSettings.endMonth}월`);
+      
+      // 학생 데이터 유효성 검사
+      for (let i = 0; i < selectedStudents.length; i++) {
+        const student = selectedStudents[i];
+        console.log(`📝 학생 ${i + 1} 데이터:`, {
+          number: student.number,
+          name: student.name,
+          hasBehaviorText: !!student.behaviorText,
+          behaviorTextLength: student.behaviorText ? student.behaviorText.length : 0,
+          behaviorTextPreview: student.behaviorText ? student.behaviorText.substring(0, 50) + '...' : 'NONE'
+        });
+        
+        if (!student.behaviorText) {
+          showAlert(`${student.name} 학생의 행동특성 텍스트가 없습니다. 먼저 행동특성을 생성해주세요.`, 'error');
+          generateBtn.disabled = false;
+          generateBtn.innerHTML = '📝 누가기록 생성';
+          return;
+        }
+      }
+      
+      const generateBtn = document.querySelector('button[onclick="generateStudentRecords()"]');
+      generateBtn.disabled = true;
+      generateBtn.innerHTML = '⏳ 생성 중...';
+      
+      // 🔄 향상된 로딩 인디케이터 표시
+      showLoadingProgress(
+        `📝 ${selectedStudents.length}명의 누가기록 생성 중...`,
+        `학생별 ${recordCount}개씩 총 ${selectedStudents.length * recordCount}개의 누가기록을 생성합니다.`
+      );
+      
+      console.log('🚀 누가기록 생성 직접 시작');
+      console.log('🚀 전송할 학생 데이터:', selectedStudents);
+      console.log('🚀 누가기록 개수:', recordCount);
+      
+      // 🔥 프론트엔드에서 직접 누가기록 생성 (백엔드 null 응답 문제 우회)
+      generateCumulativeRecordsDirectly(selectedStudents, recordCount, dateSettings)
+        .then(function(result) {
+          console.log('🎉 프론트엔드 생성 완료:', result);
+          
+          // 🔄 로딩 인디케이터 숨기기
+          hideLoadingProgress();
+          
+          generateBtn.disabled = false;
+          generateBtn.innerHTML = '📝 누가기록 생성';
+          
+          if (result && result.success === true) {
+            console.log('✅ 성공 응답 - 결과 표시 중');
+            console.log('🎯 받은 result 전체:', result);
+            console.log('🎯 result.records:', result.records);
+            
+            // records 배열 검증
+            if (!Array.isArray(result.records)) {
+              console.error('❌ records가 배열이 아님:', result.records);
+              showAlert('누가기록 데이터 형식이 올바르지 않습니다.', 'error');
+              return;
+            }
+            
+            if (result.records.length === 0) {
+              console.warn('⚠️ 생성된 누가기록이 없음');
+              showAlert('생성된 누가기록이 없습니다. 학생 데이터를 확인해주세요.', 'warning');
+              return;
+            }
+            
+            // 누가기록 생성 탭으로 자동 전환
+            console.log('🔄 records 탭으로 전환 중...');
+            showTab('records');
+            console.log('🔄 탭 전환 완료');
+            
+            // 결과 표시
+            console.log('📋 displayGeneratedRecords 호출 중...');
+            try {
+              displayGeneratedRecords(result.records);
+              console.log('📋 displayGeneratedRecords 호출 완료');
+            } catch (error) {
+              console.error('💥 displayGeneratedRecords 오류:', error);
+              console.error('💥 오류 스택:', error.stack);
+              showAlert('결과 표시 중 오류가 발생했습니다: ' + error.message, 'error');
+            }
+            
+            showAlert(`✅ ${selectedStudents.length}명의 누가기록이 생성되었습니다!`, 'success');
+          } else {
+            console.error('❌ 실패 응답:', result);
+            const errorMessage = result?.message || result?.error || '알 수 없는 오류가 발생했습니다.';
+            showAlert('누가기록 생성에 실패했습니다: ' + errorMessage, 'error');
+          }
+        })
+        .catch(function(error) {
+          hideLoadingProgress();
+          
+          console.error('💥 프론트엔드 생성 실패:', error);
+          
+          generateBtn.disabled = false;
+          generateBtn.innerHTML = '📝 누가기록 생성';
+          
+          showAlert('누가기록 생성 중 오류가 발생했습니다: ' + error.message, 'error');
+        });
+    }
+    
+    // 생성된 누가기록 표시
+    function displayGeneratedRecords(records) {
+      try {
+        console.log('🎯 displayGeneratedRecords 시작');
+        console.log('🎯 받은 records 데이터:', records);
+        console.log('🎯 records 타입:', typeof records);
+        console.log('🎯 records 길이:', records?.length);
+        
+        const recordsList = document.getElementById('recordsList');
+        console.log('🎯 recordsList 요소:', recordsList);
+        
+        if (!recordsList) {
+          console.error('❌ recordsList 요소를 찾을 수 없음');
+          return;
+        }
+        
+        if (!records) {
+          console.error('❌ records 데이터가 없음');
+          return;
+        }
+        
+        if (!Array.isArray(records)) {
+          console.error('❌ records가 배열이 아님:', records);
+          return;
+        }
+        
+        if (records.length === 0) {
+          console.error('❌ records 배열이 비어있음');
+          recordsList.innerHTML = '<p style="color: #999; text-align: center; padding: 2rem;">생성된 누가기록이 없습니다.</p>';
+          return;
+        }
+        
+        console.log('✅ records 데이터 유효성 확인 완료');
+        
+        // 각 학생 데이터 상세 검증
+        for (let i = 0; i < records.length; i++) {
+          console.log(`🔍 학생 ${i + 1} 상세 데이터:`, records[i]);
+          console.log(`🔍 studentNumber:`, records[i]?.studentNumber);
+          console.log(`🔍 studentName:`, records[i]?.studentName);
+          console.log(`🔍 records:`, records[i]?.records);
+          if (records[i]?.records) {
+            console.log(`🔍 records 타입:`, typeof records[i].records);
+            console.log(`🔍 records 길이:`, records[i].records.length);
+          }
+        }
+        
+        recordsList.innerHTML = records.map((studentRecords, index) => {
+          console.log(`🎯 HTML 생성 중 - 학생 ${index + 1}:`, studentRecords);
+          
+          return `
+            <div class="record-group" style="background: #ffffff; border: 2px solid #e3f2fd; border-radius: 12px; padding: 1.5rem; margin-bottom: 1.2rem; box-shadow: 0 4px 12px rgba(0,0,0,0.06);">
+              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.2rem; padding-bottom: 0.8rem; border-bottom: 1px solid #e3f2fd;">
+                <h4 style="color: #333; margin: 0; font-size: 1.4rem; font-weight: 700; display: flex; align-items: center; gap: 0.6rem;">
+                  <span style="background: #ffffff; color: #1976D2; border: 2px solid #1976D2; padding: 0.4rem 0.8rem; border-radius: 8px; font-size: 0.9rem; font-weight: 600;">${studentRecords.studentNumber}번</span>
+                  <span style="background: #ffffff; color: #34A853; border: 2px solid #34A853; padding: 0.4rem 0.8rem; border-radius: 8px; font-size: 0.9rem; font-weight: 600;">${studentRecords.studentName}</span>
+                  <span style="color: #666; font-size: 1.1rem; font-weight: 500;">누가기록</span>
+                </h4>
+                <button onclick="copyStudentRecords(${index})" class="copy-student-btn" style="background: linear-gradient(135deg, #ff7043, #ff8a65); color: white; border: none; padding: 0.7rem 1.5rem; border-radius: 12px; cursor: pointer; font-size: 1rem; font-weight: 600; transition: all 0.3s ease; box-shadow: 0 4px 12px rgba(255, 112, 67, 0.3);" onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 6px 20px rgba(255, 112, 67, 0.4)'" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 4px 12px rgba(255, 112, 67, 0.3)'">
+                  📋 전체 복사
+                </button>
+              </div>
+              <div class="records-container">
+                ${studentRecords.records.map((record, recordIndex) => {
+                  // 데이터 구조 처리: 객체인 경우 text 필드 사용, 문자열인 경우 직접 사용
+                  let cleanRecord = '';
+                  let displayDate = '';
+                  
+                  if (typeof record === 'object' && record.text) {
+                    cleanRecord = record.text;
+                    displayDate = record.date || '';
+                  } else if (typeof record === 'string') {
+                    cleanRecord = record;
+                  }
+                  
+                  // JSON 형식 텍스트 정리 (강화된 버전)
+                  if (typeof cleanRecord === 'string') {
+                    // 1차 시도: JSON 형태 탐지 및 파싱
+                    if (cleanRecord.includes('{"record":') || cleanRecord.includes("{'record':") || cleanRecord.includes('record":') || cleanRecord.includes("record':")) {
+                      try {
+                        // JSON 파싱 시도
+                        const parsed = JSON.parse(cleanRecord);
+                        cleanRecord = parsed.record || parsed.text || cleanRecord;
+                        console.log('✅ 클라이언트 JSON 파싱 성공:', cleanRecord.substring(0, 50) + '...');
+                      } catch (e) {
+                        console.log('⚠️ 클라이언트 JSON 파싱 실패, 정규식 시도');
+                        
+                        // 2차 시도: 다양한 정규식 패턴으로 추출
+                        const patterns = [
+                          /"record":\s*"([^"]+)"/,
+                          /'record':\s*'([^']+)'/,
+                          /record["']?\s*:\s*["']([^"']+)["']/,
+                          /"([^"]*(?:하는|하며|보임|나타남|됨|함|음)(?:\.|$)[^"]*)"/
+                        ];
+                        
+                        let extracted = false;
+                        for (let pattern of patterns) {
+                          const match = cleanRecord.match(pattern);
+                          if (match && match[1] && match[1].length > 10) {
+                            cleanRecord = match[1];
+                            console.log('✅ 정규식 추출 성공:', cleanRecord.substring(0, 50) + '...');
+                            extracted = true;
+                            break;
+                          }
+                        }
+                        
+                        if (!extracted) {
+                          console.log('⚠️ 모든 추출 방법 실패, 원본 사용');
+                          // 마지막 정리: JSON 형태의 불필요한 문자 제거
+                          cleanRecord = cleanRecord.replace(/^[{"']+|[}"']+$/g, '')
+                                             .replace(/record["']?\s*:\s*["']?/g, '')
+                                             .replace(/\\n/g, ' ')
+                                             .replace(/\\"|\\'/g, '"')
+                                             .trim();
+                        }
+                      }
+                    }
+                    
+                    // 추가 정리: 불필요한 문자 제거 및 공백 정리
+                    cleanRecord = cleanRecord.replace(/\\n/g, ' ')
+                                           .replace(/\\t/g, ' ')
+                                           .replace(/\s+/g, ' ')
+                                           .replace(/^\s+|\s+$/g, '')
+                                           .trim();
+                  }
+                  
+                  return `
+                    <div class="record-item" style="background: white; border: 1px solid #e9ecef; border-radius: 8px; padding: 1.2rem; margin-bottom: 1rem; box-shadow: 0 1px 4px rgba(0,0,0,0.04);">
+                      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.8rem; padding-bottom: 0.6rem; border-bottom: 1px solid #f0f0f0;">
+                        <div class="record-header" style="font-weight: 700; color: #1976d2; font-size: 1.2rem; display: flex; align-items: center; gap: 0.8rem;">
+                          <span style="background: #1976d2; color: white; width: 28px; height: 28px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 0.9rem; font-weight: 600;">${recordIndex + 1}</span>
+                          <span>누가기록</span>
+                          ${displayDate ? `<span style="background: #e3f2fd; color: #1976d2; padding: 0.3rem 0.8rem; border-radius: 8px; font-size: 0.85rem; font-weight: 500;">${displayDate}</span>` : ''}
+                        </div>
+                        <button onclick="copyRecord(\`${cleanRecord.replace(/`/g, '\\`').replace(/\$/g, '\\$')}\`, ${index}, ${recordIndex})" class="copy-record-btn" style="background: linear-gradient(135deg, #43a047, #66bb6a); color: white; border: none; padding: 0.5rem 1.2rem; border-radius: 8px; cursor: pointer; font-size: 0.85rem; font-weight: 600; transition: all 0.3s ease; box-shadow: 0 2px 4px rgba(67, 160, 71, 0.3);" onmouseover="this.style.transform='translateY(-1px)'; this.style.boxShadow='0 4px 8px rgba(67, 160, 71, 0.4)'" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 2px 4px rgba(67, 160, 71, 0.3)'">
+                          📋 복사
+                        </button>
+                      </div>
+                      <div class="record-content" style="color: #2c3e50; line-height: 1.7; font-size: 1rem; padding: var(--space-md); background: #f8f9fa; border-radius: 8px; text-align: left; word-break: keep-all; letter-spacing: 0.2px; margin: 0; border: 1px solid #e9ecef; white-space: normal;">
+                        ${cleanRecord.trim()}
+                      </div>
+                    </div>
+                  `;
+                }).join('')}
+              </div>
+            </div>
+          `;
+        }).join('');
+        
+        console.log('🎯 HTML 생성 완료, innerHTML 길이:', recordsList.innerHTML.length);
+        console.log('✅ displayGeneratedRecords 완료');
+        
+        // 복사 버튼 표시
+        const copyAllBtn = document.getElementById('copyAllRecordsBtn');
+        if (copyAllBtn) {
+          copyAllBtn.style.display = 'inline-block';
+        }
+        
+        // 전역 변수에 저장 (복사 기능용)
+        window.currentRecords = records;
+        
+      } catch (error) {
+        console.error('💥 displayGeneratedRecords 내부 오류:', error);
+        console.error('💥 오류 스택:', error.stack);
+        console.error('💥 받은 데이터:', records);
+        
+        // 안전한 기본 메시지 표시
+        const recordsList = document.getElementById('recordsList');
+        if (recordsList) {
+          recordsList.innerHTML = `
+            <div style="padding: 2rem; text-align: center; color: #e74c3c;">
+              <h3>⚠️ 결과 표시 중 오류가 발생했습니다</h3>
+              <p>콘솔을 확인해주세요. (F12)</p>
+              <p>오류: ${error.message}</p>
+            </div>
+          `;
+        }
+      }
+    }
+    
+    // 💼 복사 기능들
+    
+    // 개별 누가기록 복사
+    function copyRecord(text, studentIndex, recordIndex) {
+      try {
+        navigator.clipboard.writeText(text).then(() => {
+          showAlert(`📋 누가기록 ${recordIndex + 1}이 복사되었습니다!`, 'success');
+          
+          // 버튼 색상 변경 (시각적 피드백)
+          const btn = event.target;
+          const originalBg = btn.style.background;
+          btn.style.background = '#28a745';
+          btn.innerHTML = '✅ 복사됨';
+          setTimeout(() => {
+            btn.style.background = originalBg;
+            btn.innerHTML = '복사';
+          }, 1500);
+        }).catch(err => {
+          console.error('복사 실패:', err);
+          showAlert('복사에 실패했습니다. 수동으로 선택해서 복사해주세요.', 'error');
+        });
+      } catch (error) {
+        console.error('복사 오류:', error);
+        showAlert('복사 기능을 사용할 수 없습니다.', 'error');
+      }
+    }
+    
+    // 특정 학생의 모든 누가기록 복사
+    function copyStudentRecords(studentIndex) {
+      try {
+        if (!window.currentRecords || !window.currentRecords[studentIndex]) {
+          showAlert('복사할 데이터를 찾을 수 없습니다.', 'error');
+          return;
+        }
+        
+        const student = window.currentRecords[studentIndex];
+        let copyText = `${student.studentNumber}번 ${student.studentName} - 누가기록\n\n`;
+        
+        student.records.forEach((record, index) => {
+          // 데이터 구조 처리: 객체인 경우 text 필드 사용, 문자열인 경우 직접 사용
+          let cleanRecord = '';
+          if (typeof record === 'object' && record.text) {
+            cleanRecord = record.text;
+          } else if (typeof record === 'string') {
+            cleanRecord = record;
+          }
+          
+          // JSON 형식 정리 (강화된 버전)
+          if (typeof cleanRecord === 'string') {
+            if (cleanRecord.includes('{"record":') || cleanRecord.includes("{'record':") || cleanRecord.includes('record":') || cleanRecord.includes("record':")) {
+              try {
+                const parsed = JSON.parse(cleanRecord);
+                cleanRecord = parsed.record || parsed.text || cleanRecord;
+              } catch (e) {
+                // 다양한 정규식 패턴으로 추출
+                const patterns = [
+                  /"record":\s*"([^"]+)"/,
+                  /'record':\s*'([^']+)'/,
+                  /record["']?\s*:\s*["']([^"']+)["']/,
+                  /"([^"]*(?:하는|하며|보임|나타남|됨|함|음)(?:\\.|$)[^"]*)"/
+                ];
+                
+                for (let pattern of patterns) {
+                  const match = cleanRecord.match(pattern);
+                  if (match && match[1] && match[1].length > 10) {
+                    cleanRecord = match[1];
+                    break;
+                  }
+                }
+              }
+            }
+            // 추가 정리: 불필요한 문자 제거 및 공백 정리
+            cleanRecord = cleanRecord.replace(/\\n/g, ' ')
+                                   .replace(/\\t/g, ' ')
+                                   .replace(/\s+/g, ' ')
+                                   .replace(/^\s+|\s+$/g, '')
+                                   .trim();
+          }
+          
+          // 날짜 제외하고 누가기록 텍스트만 복사
+          copyText += `누가기록 ${index + 1}:\n${cleanRecord}\n\n`;
+        });
+        
+        navigator.clipboard.writeText(copyText).then(() => {
+          showAlert(`📋 ${student.studentName} 학생의 모든 누가기록이 복사되었습니다!`, 'success');
+          
+          // 버튼 시각적 피드백
+          const btn = event.target;
+          const originalBg = btn.style.background;
+          const originalText = btn.innerHTML;
+          btn.style.background = '#28a745';
+          btn.innerHTML = '✅ 복사 완료';
+          setTimeout(() => {
+            btn.style.background = originalBg;
+            btn.innerHTML = originalText;
+          }, 2000);
+        }).catch(err => {
+          console.error('복사 실패:', err);
+          showAlert('복사에 실패했습니다.', 'error');
+        });
+      } catch (error) {
+        console.error('학생 기록 복사 오류:', error);
+        showAlert('복사 중 오류가 발생했습니다.', 'error');
+      }
+    }
+    
+    // 전체 누가기록 복사 (기존 함수 개선)
+    function copyAllRecords() {
+      try {
+        if (!window.currentRecords || window.currentRecords.length === 0) {
+          showAlert('복사할 누가기록이 없습니다.', 'warning');
+          return;
+        }
+        
+        let allRecordsText = '누가기록 전체\n' + '='.repeat(50) + '\n\n';
+        
+        window.currentRecords.forEach((student, studentIndex) => {
+          allRecordsText += `${student.studentNumber}번 ${student.studentName}\n`;
+          allRecordsText += '-'.repeat(30) + '\n';
+          
+          student.records.forEach((record, recordIndex) => {
+            // 데이터 구조 처리: 객체인 경우 text 필드 사용, 문자열인 경우 직접 사용
+            let cleanRecord = '';
+            if (typeof record === 'object' && record.text) {
+              cleanRecord = record.text;
+            } else if (typeof record === 'string') {
+              cleanRecord = record;
+            }
+            
+            // JSON 형식 정리 (강화된 버전)
+            if (typeof cleanRecord === 'string') {
+              if (cleanRecord.includes('{"record":') || cleanRecord.includes("{'record':") || cleanRecord.includes('record":') || cleanRecord.includes("record':")) {
+                try {
+                  const parsed = JSON.parse(cleanRecord);
+                  cleanRecord = parsed.record || parsed.text || cleanRecord;
+                } catch (e) {
+                  // 다양한 정규식 패턴으로 추출
+                  const patterns = [
+                    /"record":\s*"([^"]+)"/,
+                    /'record':\s*'([^']+)'/,
+                    /record["']?\s*:\s*["']([^"']+)["']/,
+                    /"([^"]*(?:하는|하며|보임|나타남|됨|함|음)(?:\\.|$)[^"]*)"/
+                  ];
+                  
+                  for (let pattern of patterns) {
+                    const match = cleanRecord.match(pattern);
+                    if (match && match[1] && match[1].length > 10) {
+                      cleanRecord = match[1];
+                      break;
+                    }
+                  }
+                }
+              }
+              // 추가 정리: 불필요한 문자 제거 및 공백 정리
+              cleanRecord = cleanRecord.replace(/\\n/g, ' ')
+                                     .replace(/\\t/g, ' ')
+                                     .replace(/\s+/g, ' ')
+                                     .replace(/^\s+|\s+$/g, '')
+                                     .trim();
+            }
+            
+            allRecordsText += `${recordIndex + 1}. ${cleanRecord}\n`;
+          });
+          
+          allRecordsText += '\n';
+        });
+        
+        navigator.clipboard.writeText(allRecordsText).then(() => {
+          showAlert(`📋 전체 누가기록(${window.currentRecords.length}명)이 복사되었습니다!`, 'success');
+        }).catch(err => {
+          console.error('전체 복사 실패:', err);
+          showAlert('복사에 실패했습니다.', 'error');
+        });
+      } catch (error) {
+        console.error('전체 복사 오류:', error);
+        showAlert('복사 중 오류가 발생했습니다.', 'error');
+      }
+    }
+    
+    // 페이지 로드 시 초기화
+    document.addEventListener('DOMContentLoaded', function() {
+      loadSavedStudents();
+      initializeStudentForm();
+      
+      // 탭 전환 시 학생 목록 새로고침
+      setTimeout(refreshStudentsList, 500);
+    });
+    
+    // showTab 함수 확장 - records 탭 선택 시 학생 목록 새로고침
+    const originalShowTab = window.showTab;
+    window.showTab = function(tab) {
+      if (originalShowTab) originalShowTab(tab);
+      if (tab === 'records') {
+        setTimeout(refreshStudentsList, 100);
+      }
+    };
+
+    // 🔥 switchTab 함수 - showTab과 일관성 유지
+    function switchTab(tabName) {
+      console.log(`🔄 switchTab 함수 호출됨 - 대상 탭: ${tabName}`);
+      
+      // 모든 탭 버튼 비활성화
+      document.querySelectorAll('.tab-button').forEach(btn => {
+        btn.classList.remove('active');
+      });
+      
+      // 모든 탭 콘텐츠 비활성화 (CSS .active 클래스 사용)
+      document.querySelectorAll('.tab-content').forEach(content => {
+        content.classList.remove('active');
+      });
+      
+      // 선택된 탭 버튼 활성화
+      const targetButton = document.querySelector(`[onclick="showTab('${tabName}')"]`);
+      if (targetButton) {
+        targetButton.classList.add('active');
+        console.log(`✅ 탭 버튼 활성화 완료: ${tabName}`);
+      } else {
+        console.error(`❌ 탭 버튼을 찾을 수 없음: ${tabName}`);
+      }
+      
+      // 선택된 탭 콘텐츠 활성화 (CSS .active 클래스 사용)
+      const targetContent = document.getElementById(`${tabName}-tab`);
+      if (targetContent) {
+        targetContent.classList.add('active');
+        console.log(`✅ 탭 콘텐츠 표시 완료: ${tabName}-tab`);
+      } else {
+        console.error(`❌ 탭 콘텐츠를 찾을 수 없음: ${tabName}-tab`);
+      }
+    }
+
+    // 🎯 행동발달 및 특기사항 탭 내용 업데이트 함수
+    function updateBehaviorTabContent(text, isAI = false, compliance = null) {
+      const behaviorTextArea = document.getElementById('behaviorTextInput');
+      if (behaviorTextArea) {
+        behaviorTextArea.value = text;
+      }
+      
+      // 행동발달 및 특기사항 탭에 생성된 텍스트 표시
+      const behaviorTab = document.getElementById('behavior-tab');
+      if (behaviorTab) {
+        // 기존 생성 결과 영역 찾기 또는 생성
+        let resultContainer = behaviorTab.querySelector('.generated-result-container');
+        if (!resultContainer) {
+          resultContainer = document.createElement('div');
+          resultContainer.className = 'generated-result-container';
+          resultContainer.style.marginTop = '1.5rem';
+          
+          // 텍스트 영역 앞에 추가
+          const textArea = behaviorTab.querySelector('#behaviorTextInput');
+          if (textArea && textArea.parentNode) {
+            textArea.parentNode.insertBefore(resultContainer, textArea);
+          } else {
+            behaviorTab.appendChild(resultContainer);
+          }
+        }
+        
+        // 생성 결과 표시
+        resultContainer.innerHTML = `
+          <div class="record-header">
+            <div style="display: flex; align-items: center; gap: 1rem;">
+              <h4 style="margin: 0; color: #34A853;">📋 생성된 행동특성 및 종합의견</h4>
+              <div class="generation-badge ${isAI ? 'ai-badge' : 'basic-badge'}">
+                ${isAI ? '🤖 AI 전문 생성' : '📝 기본 생성'}
+              </div>
+            </div>
+            <button class="copy-button-small" onclick="copyToClipboard('${text.replace(/'/g, "\\'")}', '행동특성')">
+              📋 복사
+            </button>
+          </div>
+          <div class="record-content ${isAI ? 'ai-generated' : 'basic-generated'}">
+            ${text}
+          </div>
+          <div class="record-meta">
+            <span>글자수: ${text.length}자</span>
+            <span>생성시간: ${new Date().toLocaleTimeString()}</span>
+            ${compliance ? `<span class="compliance-badge ${compliance.lengthOk && compliance.endingOk && compliance.contentOk ? 'compliant' : 'warning'}">
+              ${compliance.lengthOk && compliance.endingOk && compliance.contentOk ? '✅ NEIS 규정 준수' : '⚠️ 검토 필요'}
+            </span>` : ''}
+          </div>
+        `;
+        
+        // 부드러운 스크롤 애니메이션
+        resultContainer.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        
+        // 규정 검사 결과 업데이트
+        if (compliance) {
+          updateComplianceIndicators(compliance);
+        }
+      }
+    }
+
+    // 🚀 AI 생성 텍스트를 위한 개선된 미리보기 업데이트 함수
+    function updateBehaviorPreview(text, isGenerated = false, isAI = false) {
+      const previewBox = document.getElementById('behaviorPreview');
+      const copyBtn = document.getElementById('copyPreviewBtn');
+      const complianceStatus = document.getElementById('complianceStatus');
+      
+      if (!text || text.trim() === '') {
+        updatePreview(); // 기본 미리보기로 돌아가기
+        return;
+      }
+      
+      // AI 생성 텍스트 표시
+      previewBox.innerHTML = ''; // 기존 내용 클리어
+      
+      // 생성 방식 표시 배지 추가
+      const badge = document.createElement('div');
+      badge.className = `generation-badge ${isAI ? 'ai-badge' : 'basic-badge'}`;
+      badge.innerHTML = isAI ? 
+        '🤖 AI 전문 생성' : 
+        '📝 기본 생성';
+      
+      // 텍스트 내용 추가
+      const textContent = document.createElement('div');
+      textContent.className = 'preview-text';
+      textContent.textContent = text;
+      
+      // 복사 버튼 추가 (항상 표시)
+      const copyButton = document.createElement('button');
+      copyButton.className = 'copy-button visible';
+      copyButton.innerHTML = '📋 복사';
+      copyButton.onclick = () => copyToClipboard('behaviorPreview');
+      
+      // 요소들을 미리보기 박스에 추가
+      previewBox.appendChild(badge);
+      previewBox.appendChild(textContent);
+      previewBox.appendChild(copyButton);
+      
+      // 스타일 클래스 적용
+      previewBox.classList.remove('has-content', 'ai-generated', 'basic-generated');
+      previewBox.classList.add('has-content');
+      if (isAI) {
+        previewBox.classList.add('ai-generated');
+      } else if (isGenerated) {
+        previewBox.classList.add('basic-generated');
+      }
+      
+      // 규정 준수 검사 표시
+      checkCompliance(text);
+      complianceStatus.classList.remove('hidden');
+      
+      // 기존 복사 버튼 숨기기 (새 버튼으로 대체됨)
+      const oldCopyBtn = document.getElementById('copyPreviewBtn');
+      if (oldCopyBtn) {
+        oldCopyBtn.classList.add('hidden');
+      }
+    }
+
+    // 행동특성 텍스트 생성
+    // 기존 함수 제거됨 - AI 통합 함수로 교체
+
+    // 행동특성 텍스트 저장
+    function saveBehaviorText() {
+      if (!behaviorText) {
+        showAlert('먼저 행동특성 텍스트를 생성해주세요.', 'warning');
+        return;
+      }
+
+      // Google Sheets 저장 구현
+      showAlert('Google Sheets 저장 기능은 워크스페이스 생성 후 사용 가능합니다.', 'info');
+    }
+
+    // 누가기록 생성
+    function generateRecords() {
+      if (!behaviorText) {
+        showAlert('먼저 행동특성 텍스트를 생성해주세요.', 'warning');
+        return;
+      }
+
+      const count = parseInt(document.getElementById('recordCount').value);
+      
+      google.script.run
+        .withSuccessHandler(function(result) {
+          if (result.success) {
+            generatedRecords = result.records;
+            displayRecords(result.records);
+            showAlert(`${result.totalCount}개의 누가기록이 생성되었습니다!`, 'success');
+          } else {
+            showAlert(result.message, 'warning');
+          }
+        })
+        .withFailureHandler(function(error) {
+          console.error('누가기록 생성 실패:', error);
+          showAlert('누가기록 생성 중 오류가 발생했습니다.', 'warning');
+        })
+        .generateCumulativeRecords(behaviorText, count);
+    }
+
+    // 누가기록 표시 (개선된 버전)
+    function displayRecords(records) {
+      const container = document.getElementById('recordsList');
+      const copyAllBtn = document.getElementById('copyAllRecordsBtn');
+      
+      if (!records || records.length === 0) {
+        container.innerHTML = `
+          <div style="text-align: center; padding: 2rem; background: #f8f9fa; border-radius: 12px; margin: 1rem 0;">
+            <p style="color: #666; margin-bottom: 1rem; font-size: 1rem;">누가기록을 생성하면 여기에 표시됩니다.</p>
+            
+            <div style="background: #fff3cd; border: 2px solid #ffc107; border-radius: 8px; padding: 1rem; margin-top: 1rem;">
+              <h4 style="color: #856404; margin: 0 0 0.5rem 0; font-size: 1rem;">⚠️ 다중 학생 생성 시 참고사항</h4>
+              <p style="color: #856404; margin: 0; font-size: 0.9rem; line-height: 1.4;">
+                여러 학생을 한 번에 생성할 때 Rate Limiting으로 인해 일부 실패할 수 있습니다.<br>
+                <strong>권장:</strong> 1-2명씩 나누어 생성하거나, 실패 시 개별 학생으로 재시도해주세요.
+              </p>
+            </div>
+          </div>
+        `;
+        copyAllBtn.style.display = 'none';
+        return;
+      }
+      
+      // 전체 복사 버튼 표시
+      copyAllBtn.style.display = 'inline-block';
+      
+      container.innerHTML = records.map((record, index) => `
+        <div class="preview-box fade-in" style="margin-bottom: 1rem; position: relative;" data-record-index="${index}">
+          <div class="record-header">
+            <strong>누가기록 ${index + 1}번</strong>
+            <button class="copy-button-small" onclick="copyIndividualRecord(${index})" title="이 기록만 복사">
+              📋
+            </button>
+          </div>
+          <div class="record-content" id="record-${index}">
+            ${record.text}
+          </div>
+          <div class="record-meta">
+            📅 ${record.date} | 📏 ${record.length}자 ${record.generated === 'ai' ? '| 🤖 AI 생성' : ''}
+          </div>
+        </div>
+      `).join('');
+      
+      // 전역 변수에 기록 저장 (복사용)
+      window.currentRecords = records;
+    }
+    
+    // 개별 누가기록 복사
+    function copyIndividualRecord(index) {
+      if (!window.currentRecords || !window.currentRecords[index]) {
+        showAlert('복사할 기록을 찾을 수 없습니다.', 'error');
+        return;
+      }
+      
+      const record = window.currentRecords[index];
+      copyToClipboard('record-' + index, record.text);
+    }
+    
+    // 전체 누가기록 복사
+    function copyAllRecords() {
+      if (!window.currentRecords || window.currentRecords.length === 0) {
+        showAlert('복사할 기록이 없습니다.', 'warning');
+        return;
+      }
+      
+      const allRecordsText = window.currentRecords.map((record, index) => 
+        `[누가기록 ${index + 1}] (${record.date})\n${record.text}\n`
+      ).join('\n');
+      
+      navigator.clipboard.writeText(allRecordsText).then(() => {
+        showAlert(`전체 누가기록 ${window.currentRecords.length}개가 복사되었습니다!`, 'success');
+      }).catch(err => {
+        showAlert('복사 중 오류가 발생했습니다.', 'error');
+      });
+    }
+
+    // 워크스페이스 생성
+    function createWorkspace() {
+      const userName = prompt('사용자 이름을 입력하세요:');
+      if (!userName) return;
+
+      google.script.run
+        .withSuccessHandler(function(result) {
+          if (result.success) {
+            currentSpreadsheetId = result.spreadsheetId;
+            showAlert(`워크스페이스가 생성되었습니다! 
+              <a href="${result.spreadsheetUrl}" target="_blank">Google Sheets 열기</a>`, 'success');
+          } else {
+            showAlert(result.message, 'warning');
+          }
+        })
+        .withFailureHandler(function(error) {
+          console.error('워크스페이스 생성 실패:', error);
+          showAlert('워크스페이스 생성 중 오류가 발생했습니다.', 'warning');
+        })
+        .createUserWorkspace(userName);
+    }
+
+    // 선택 초기화
+    function clearSelection() {
+      selectedKeywords = [];
+      document.querySelectorAll('.keyword-checkbox').forEach(cb => cb.checked = false);
+      updateSelectedKeywords();
+      updateStatistics();
+      updatePreview();
+      showAlert('선택이 초기화되었습니다.', 'info');
+    }
+
+    // 클립보드 복사
+    // 개선된 복사 함수 (오버로드 지원)
+    function copyToClipboard(elementIdOrText, customText = null) {
+      let text;
+      
+      if (customText) {
+        // 커스텀 텍스트가 제공된 경우
+        text = customText;
+      } else if (typeof elementIdOrText === 'string' && document.getElementById(elementIdOrText)) {
+        // 요소 ID가 제공된 경우
+        const element = document.getElementById(elementIdOrText);
+        text = element.value || element.textContent || element.innerText;
+      } else {
+        // 직접 텍스트가 제공된 경우
+        text = elementIdOrText;
+      }
+      
+      if (!text || text.trim() === '') {
+        showAlert('복사할 내용이 없습니다.', 'warning');
+        return;
+      }
+      
+      copyText(text);
+    }
+
+    function copyText(text) {
+      navigator.clipboard.writeText(text).then(function() {
+        showAlert('📋 클립보드에 복사되었습니다!', 'success');
+      }).catch(function(error) {
+        console.error('복사 실패:', error);
+        // 폴백: textarea를 이용한 복사 시도
+        try {
+          const textarea = document.createElement('textarea');
+          textarea.value = text;
+          document.body.appendChild(textarea);
+          textarea.select();
+          document.execCommand('copy');
+          document.body.removeChild(textarea);
+          showAlert('📋 클립보드에 복사되었습니다!', 'success');
+        } catch (fallbackError) {
+          showAlert('❌ 복사에 실패했습니다.', 'error');
+        }
+      });
+    }
+
+    // 알림 표시
+    function showAlert(message, type = 'info') {
+      const alertDiv = document.createElement('div');
+      alertDiv.className = `alert alert-${type}`;
+      alertDiv.innerHTML = message;
+      
+      document.querySelector('.container').insertBefore(alertDiv, document.querySelector('.container').firstChild);
+      
+      setTimeout(() => {
+        alertDiv.remove();
+      }, 5000);
+    }
+
+    // 🔄 향상된 로딩 인디케이터 함수들
+    function showLoadingOverlay(message = '처리 중...', subMessage = '') {
+      const loadingOverlay = document.createElement('div');
+      loadingOverlay.id = 'loadingOverlay';
+      loadingOverlay.className = 'loading-overlay';
+      loadingOverlay.innerHTML = `
+        <div>
+          <div class="loading-spinner"></div>
+          <div style="text-align: center;">
+            <div style="font-size: 1.2rem; font-weight: 600; margin-bottom: 0.5rem;">${message}</div>
+            ${subMessage ? `<div style="font-size: 0.9rem; color: #666;">${subMessage}</div>` : ''}
+          </div>
+        </div>
+      `;
+      document.body.appendChild(loadingOverlay);
+    }
+
+    function hideLoadingOverlay() {
+      const loadingOverlay = document.getElementById('loadingOverlay');
+      if (loadingOverlay) {
+        loadingOverlay.remove();
+      }
+    }
+
+    function showLoadingProgress(message = '생성 중...', progressMessage = '') {
+      const progressDiv = document.createElement('div');
+      progressDiv.id = 'loadingProgress';
+      progressDiv.className = 'loading-progress';
+      progressDiv.innerHTML = `
+        <div style="font-weight: 600; margin-bottom: 0.5rem;">${message}</div>
+        <div class="progress-bar">
+          <div class="progress-fill"></div>
+        </div>
+        <div style="font-size: 0.9rem; color: #666;">${progressMessage}</div>
+      `;
+      
+      // 기존 progress가 있으면 제거
+      const existingProgress = document.getElementById('loadingProgress');
+      if (existingProgress) {
+        existingProgress.remove();
+      }
+      
+      // 적절한 위치에 추가 (현재 활성 탭 또는 container 상단)
+      const container = document.querySelector('.container');
+      container.insertBefore(progressDiv, container.firstChild);
+      
+      return progressDiv;
+    }
+
+    function hideLoadingProgress() {
+      const progressDiv = document.getElementById('loadingProgress');
+      if (progressDiv) {
+        progressDiv.remove();
+      }
+    }
+
+    function updateLoadingProgress(message, subMessage = '') {
+      const progressDiv = document.getElementById('loadingProgress');
+      if (progressDiv) {
+        progressDiv.innerHTML = `
+          <div style="font-weight: 600; margin-bottom: 0.5rem;">${message}</div>
+          <div class="progress-bar">
+            <div class="progress-fill"></div>
+          </div>
+          <div style="font-size: 0.9rem; color: #666;">${subMessage}</div>
+        `;
+      }
+    }
+
+    // 기타 함수들
+    function saveRecords() {
+      showAlert('누가기록 저장 기능은 워크스페이스 생성 후 사용 가능합니다.', 'info');
+    }
+
+    function exportRecords() {
+      showAlert('Excel 내보내기 기능은 개발 중입니다.', 'info');
+    }
+
+    function openSampleWorkspace() {
+      showAlert('샘플 워크스페이스 기능은 개발 중입니다.', 'info');
+    }
+
+    function addStudent() {
+      showAlert('학생 추가 기능은 개발 중입니다.', 'info');
+    }
+
+    function saveStudentData() {
+      showAlert('학생 정보 저장 기능은 개발 중입니다.', 'info');
+    }
+    
+    function generateRecords() {
+      const recordCount = parseInt(document.getElementById('recordCount')?.value || 5);
+      const includeActivities = document.getElementById('includeActivities')?.checked || false;
+      const behaviorText = document.getElementById('behaviorTextInput')?.value?.trim() || '';
+      
+      if (!behaviorText) {
+        showAlert('누가기록 생성을 위해서는 먼저 행동특성 텍스트를 입력해주세요.', 'warning');
+        return;
+      }
+      
+      if (selectedKeywords.length === 0) {
+        showAlert('누가기록 생성을 위해서는 키워드를 선택해주세요.', 'warning');
+        return;
+      }
+      
+      // 기본 누가기록 템플릿 생성
+      const records = [];
+      const today = new Date();
+      
+      for (let i = 0; i < recordCount; i++) {
+        const recordDate = new Date(today);
+        recordDate.setDate(today.getDate() - (recordCount - 1 - i) * 3); // 3일 간격
+        
+        const dateStr = recordDate.toLocaleDateString('ko-KR', {
+          year: 'numeric',
+          month: '2-digit',
+          day: '2-digit'
+        }).replace(/\. /g, '.').replace(/\.$/, '');
+        
+        // 선택된 키워드에서 랜덤하게 선택하여 기록 생성
+        const randomKeywords = selectedKeywords.sort(() => 0.5 - Math.random()).slice(0, 2);
+        const keywordTexts = randomKeywords.map(sk => {
+          const category = keywordDatabase.find(cat => cat.id === sk.categoryId);
+          const keyword = category?.keywords.find(k => k.id === sk.keywordId);
+          return keyword?.autoText || keyword?.text || sk.text;
+        });
+        
+        const recordContent = `${keywordTexts.join(', ')} 모습을 보임.`;
+        
+        records.push({
+          date: dateStr,
+          content: recordContent
+        });
+      }
+      
+      displaySingleStudentRecords(records);
+      showAlert(`${recordCount}개의 누가기록이 생성되었습니다.`, 'success');
+    }
+    
+    function displaySingleStudentRecords(records) {
+      const container = document.getElementById('generatedRecords');
+      if (!container) return;
+      
+      let html = '<div class="records-list">';
+      records.forEach((record, index) => {
+        html += `
+          <div class="record-item" style="background: #f8f9fa; border: 1px solid #dee2e6; border-radius: 8px; padding: 1rem; margin: 0.5rem 0;">
+            <div class="record-header" style="font-weight: 600; color: #495057; margin-bottom: 0.5rem;">
+              ${record.date}
+            </div>
+            <div class="record-content" style="color: #333; line-height: 1.5;">
+              ${record.content}
+            </div>
+          </div>`;
+      });
+      html += '</div>';
+      
+      container.innerHTML = html;
+      
+      // 복사 버튼 표시
+      const copyBtn = document.getElementById('copyRecordsBtn');
+      if (copyBtn) {
+        copyBtn.style.display = 'inline-block';
+      }
+    }
+    
+    // 행동특성 텍스트 복사
+    function copyBehaviorText() {
+      const behaviorTextInput = document.getElementById('behaviorTextInput');
+      if (behaviorTextInput && behaviorTextInput.value.trim()) {
+        copyToClipboard(behaviorTextInput.value.trim());
+      } else {
+        showAlert('복사할 행동특성 텍스트가 없습니다.', 'warning');
+      }
+    }
+    
+    // 행동특성 텍스트 지우기
+    function clearBehaviorText() {
+      const behaviorTextInput = document.getElementById('behaviorTextInput');
+      if (behaviorTextInput) {
+        behaviorTextInput.value = '';
+        showAlert('행동특성 텍스트가 지워졌습니다.', 'info');
+      }
+    }
+    
+    // 모든 누가기록 복사 (날짜 제외)
+    function copyAllRecords() {
+      const recordsContainer = document.getElementById('generatedRecords');
+      if (!recordsContainer) {
+        showAlert('복사할 기록이 없습니다.', 'warning');
+        return;
+      }
+      
+      const recordItems = recordsContainer.querySelectorAll('.record-item');
+      if (recordItems.length === 0) {
+        showAlert('복사할 기록이 없습니다.', 'warning');
+        return;
+      }
+      
+      let allRecordsText = '';
+      recordItems.forEach((item, index) => {
+        const contentElement = item.querySelector('.record-content');
+        if (contentElement) {
+          // 날짜 정보는 제외하고 내용만 추출
+          let content = contentElement.textContent || contentElement.innerText;
+          // 날짜 패턴 제거 (YYYY.MM.DD 형식)
+          content = content.replace(/\d{4}\.\d{2}\.\d{2}\.?\s*/g, '').trim();
+          allRecordsText += `${index + 1}. ${content}\n\n`;
+        }
+      });
+      
+      if (allRecordsText.trim()) {
+        copyToClipboard(allRecordsText.trim());
+      } else {
+        showAlert('복사할 내용이 없습니다.', 'warning');
+      }
+    }
+
+    // ==================== AI 설정 관련 함수들 ====================
+    
+    // API 키 표시/숨기기 토글
+    function toggleApiKeyVisibility() {
+      const apiKeyInput = document.getElementById('geminiApiKey');
+      const toggleBtn = document.getElementById('toggleApiKey');
+      
+      if (apiKeyInput.type === 'password') {
+        apiKeyInput.type = 'text';
+        toggleBtn.textContent = '🙈 숨기기';
+      } else {
+        apiKeyInput.type = 'password';
+        toggleBtn.textContent = '👁️ 보기';
+      }
+    }
+
+    // 중복된 async testApiKey 함수 제거됨 - 아래에 개선된 버전 사용
+
+    // API 키 저장
+    function saveApiKey() {
+      const apiKey = document.getElementById('geminiApiKey').value.trim();
+      
+      if (!apiKey) {
+        showAlert('API 키를 입력해주세요.', 'warning');
+        return;
+      }
+
+      try {
+        // Google Apps Script Properties에 저장
+        google.script.run
+          .withSuccessHandler(function(result) {
+            if (result.success) {
+              geminiApiKey = apiKey;
+              // localStorage에도 저장
+              localStorage.setItem('geminiApiKey', apiKey);
+              updateApiStatus('connected', 'API 키가 저장되고 활성화되었습니다');
+              showAlert('API 키가 성공적으로 저장되었습니다!', 'success');
+              loadAiSettings(); // 설정 새로고침
+            } else {
+              showAlert('API 키 저장 실패: ' + result.message, 'error');
+            }
+          })
+          .withFailureHandler(function(error) {
+            showAlert('API 키 저장 중 오류 발생: ' + error.message, 'error');
+          })
+          .setApiKey(apiKey);
+      } catch (error) {
+        showAlert('API 키 저장 중 오류가 발생했습니다.', 'error');
+      }
+    }
+
+    // API 키 테스트
+    function testApiKey() {
+      const apiKey = document.getElementById('geminiApiKey').value.trim();
+      
+      console.log('🧪 API 키 테스트 시작, 키 길이:', apiKey.length);
+      
+      if (!apiKey) {
+        showAlert('먼저 API 키를 입력해주세요.', 'warning');
+        return;
+      }
+      
+      if (apiKey.length < 20) {
+        showAlert('API 키가 너무 짧습니다. 올바른 Gemini API 키를 입력해주세요.', 'warning');
+        return;
+      }
+      
+      const testBtn = document.querySelector('button[onclick="testApiKey()"]');
+      if (testBtn) {
+        testBtn.disabled = true;
+        testBtn.innerHTML = '⏳ 테스트 중...';
+      }
+      
+      updateApiStatus('testing', 'API 키 유효성을 확인하는 중입니다...');
+      
+      try {
+        google.script.run
+          .withSuccessHandler(function(result) {
+            console.log('🧪 테스트 결과:', result);
+            
+            if (testBtn) {
+              testBtn.disabled = false;
+              testBtn.innerHTML = '🧪 API 키 테스트';
+            }
+            
+            if (result && result.success) {
+              geminiApiKey = apiKey;
+              // localStorage에도 저장
+              localStorage.setItem('geminiApiKey', apiKey);
+              updateApiStatus('connected', `API 키 테스트 성공! (${result.keyPreview || ''}) AI 기능을 사용할 수 있습니다.`);
+              
+              const successMsg = result.testResponse ? 
+                `🎉 API 키가 정상적으로 작동합니다!\n테스트 응답: "${result.testResponse}"` :
+                '🎉 API 키가 정상적으로 작동합니다!';
+                
+              showAlert(successMsg, 'success');
+              
+              // 자동으로 저장 제안
+              setTimeout(() => {
+                if (confirm('테스트가 성공했습니다! 이 API 키를 저장하시겠습니까?')) {
+                  saveApiKey();
+                }
+              }, 1000);
+              
+            } else {
+              updateApiStatus('error', 'API 키 테스트 실패');
+              
+              let errorMsg = '❌ API 키 테스트 실패';
+              if (result && result.message) {
+                errorMsg += `: ${result.message}`;
+              }
+              if (result && result.error) {
+                errorMsg += ` (${result.error})`;
+              }
+              
+              showAlert(errorMsg, 'error');
+              
+              // 오류 유형별 가이드 제공
+              if (result && result.error === 'INVALID_API_KEY') {
+                setTimeout(() => {
+                  showAlert('📝 팁: Google AI Studio에서 API 키를 다시 확인해주세요.', 'info');
+                }, 2000);
+              }
+            }
+          })
+          .withFailureHandler(function(error) {
+            console.error('🧪 테스트 오류:', error);
+            
+            if (testBtn) {
+              testBtn.disabled = false;
+              testBtn.innerHTML = '🧪 API 키 테스트';
+            }
+            
+            updateApiStatus('error', 'API 키 테스트 오류');
+            showAlert(`❌ 네트워크 오류가 발생했습니다: ${error.message}`, 'error');
+          })
+          .testGeminiApiKey(apiKey);
+      } catch (error) {
+        if (testBtn) {
+          testBtn.disabled = false;
+          testBtn.textContent = '🧪 API 테스트';
+        }
+        showAlert('API 키 테스트 중 오류가 발생했습니다.', 'error');
+      }
+    }
+
+    // API 키 제거
+    function clearApiKey() {
+      if (!confirm('정말로 API 키를 제거하시겠습니까?\n제거 후에는 AI 기능을 사용할 수 없습니다.')) {
+        return;
+      }
+
+      try {
+        google.script.run
+          .withSuccessHandler(function(result) {
+            geminiApiKey = '';
+            // localStorage에서도 제거
+            localStorage.removeItem('geminiApiKey');
+            document.getElementById('geminiApiKey').value = '';
+            updateApiStatus('', 'API 키를 입력해주세요');
+            showAlert('API 키가 제거되었습니다.', 'info');
+          })
+          .withFailureHandler(function(error) {
+            showAlert('API 키 제거 중 오류 발생: ' + error.message, 'error');
+          })
+          .clearApiKey();
+      } catch (error) {
+        showAlert('API 키 제거 중 오류가 발생했습니다.', 'error');
+      }
+    }
+
+    // API 상태 업데이트
+    function updateApiStatus(status, message) {
+      const statusIndicator = document.getElementById('statusIndicator');
+      const statusText = document.getElementById('statusText');
+      
+      // 기존 클래스 제거
+      statusIndicator.className = 'status-indicator';
+      
+      // 새 상태 클래스 추가
+      if (status) {
+        statusIndicator.classList.add(status);
+      }
+      
+      statusText.textContent = message;
+    }
+
+    // AI 설정 로드
+    function loadAiSettings() {
+      try {
+        google.script.run
+          .withSuccessHandler(function(settings) {
+            if (settings) {
+              // AI 설정 폼에 값 설정
+              document.getElementById('behaviorStyle').value = settings.behaviorStyle || 'standard';
+              document.getElementById('recordCount').value = settings.recordCount || 5;
+              document.getElementById('includeActivities').checked = settings.includeActivities !== false;
+              document.getElementById('useAiFallback').checked = settings.useAiFallback !== false;
+              
+              // API 키 상태 확인
+              if (settings.hasApiKey) {
+                updateApiStatus('connected', 'API 키가 설정되어 있습니다');
+                // API 키 플래그만 설정 (실제 키는 백엔드에서 관리)
+                geminiApiKey = 'API_KEY_AVAILABLE';
+              } else {
+                updateApiStatus('', 'API 키를 입력해주세요');
+                geminiApiKey = '';
+              }
+              
+              // 사용량 통계 업데이트
+              updateUsageStats(settings.usage || {});
+            }
+          })
+          .withFailureHandler(function(error) {
+            console.warn('AI 설정 로드 실패:', error);
+            updateApiStatus('', 'API 키를 입력해주세요');
+          })
+          .getAiSettings();
+      } catch (error) {
+        console.warn('AI 설정 로드 중 오류:', error);
+      }
+    }
+
+    // 사용량 통계 업데이트
+    function updateUsageStats(usage) {
+      document.getElementById('todayUsage').textContent = usage.today || 0;
+      document.getElementById('monthUsage').textContent = usage.month || 0;
+      document.getElementById('totalUsage').textContent = usage.total || 0;
+      
+      usageStats = usage;
+    }
+
+    // AI 설정 저장
+    function saveAiSettings() {
+      const settings = {
+        behaviorStyle: document.getElementById('behaviorStyle').value,
+        recordCount: parseInt(document.getElementById('recordCount').value),
+        includeActivities: document.getElementById('includeActivities').checked,
+        useAiFallback: document.getElementById('useAiFallback').checked
+      };
+
+      try {
+        google.script.run
+          .withSuccessHandler(function(result) {
+            if (result.success) {
+              aiSettings = settings;
+              showAlert('AI 설정이 저장되었습니다.', 'success');
+            } else {
+              showAlert('AI 설정 저장 실패: ' + result.message, 'error');
+            }
+          })
+          .withFailureHandler(function(error) {
+            showAlert('AI 설정 저장 중 오류 발생: ' + error.message, 'error');
+          })
+          .saveAiSettings(settings);
+      } catch (error) {
+        showAlert('AI 설정 저장 중 오류가 발생했습니다.', 'error');
+      }
+    }
+
+    // AI 기능이 활성화되어 있는지 확인
+    function isAiEnabled() {
+      return geminiApiKey && geminiApiKey !== '';
+    }
+
+    // 생성 함수들을 AI 기능과 연동하도록 수정
+    function generateBehaviorText() {
+      console.log('generateBehaviorText 함수 호출됨');
+      console.log('선택된 키워드 수:', selectedKeywords.length);
+      console.log('API 키 상태:', geminiApiKey ? '설정됨' : '미설정');
+      
+      if (selectedKeywords.length === 0) {
+        showAlert('키워드를 하나 이상 선택해주세요.', 'warning');
+        return;
+      }
+      
+      // API 키 미설정 시 명확한 안내
+      if (!geminiApiKey || geminiApiKey === '') {
+        showAlert('💡 팁: AI 설정 탭에서 GEMINI API 키를 등록하면 더 전문적인 행동특성을 생성할 수 있습니다. 지금은 기본 생성으로 진행합니다.', 'info');
+      }
+
+      const generateBtn = document.getElementById('generateBtn');
+      if (!generateBtn) {
+        console.error('generateBtn 요소를 찾을 수 없습니다');
+        return;
+      }
+      
+      generateBtn.disabled = true;
+      generateBtn.innerHTML = '⏳ 생성 중...';
+
+      // 🔄 향상된 로딩 인디케이터 표시
+      showLoadingProgress(
+        `✨ 행동특성 및 종합의견 생성 중...`,
+        `선택된 키워드 ${selectedKeywords.length}개를 바탕으로 행동특성을 생성합니다.`
+      );
+
+      // 🔥 개선된 API 키 전송 로직
+      if (geminiApiKey && geminiApiKey.trim() !== '') {
+        console.log('🔑 API 키 전송 시도:', geminiApiKey.slice(-4));
+        
+        google.script.run
+          .withSuccessHandler(function(keyResult) {
+            console.log('🔑 API 키 설정 결과:', keyResult);
+            
+            if (keyResult && keyResult.success) {
+              console.log('✅ API 키 설정 성공 - AI 생성 모드로 진행');
+              proceedWithGeneration();
+            } else {
+              console.warn('⚠️ API 키 설정 실패 - 기본 생성으로 진행');
+              showAlert(`API 키 오류: ${keyResult?.message || '알 수 없음'}. 기본 생성으로 진행합니다.`, 'warning');
+              proceedWithGeneration();
+            }
+          })
+          .withFailureHandler(function(error) {
+            console.error('🔑 API 키 전송 실패:', error);
+            showAlert('네트워크 오류로 기본 생성으로 진행합니다.', 'warning');
+            proceedWithGeneration();
+          })
+          .setApiKey(geminiApiKey.trim());
+      } else {
+        console.log('🔑 API 키 없음 - 기본 생성으로 직접 진행');
+        updateLoadingProgress('✨ 행동특성 생성 중...', 'API 키가 설정되지 않았습니다. 저장된 키 또는 기본 생성을 사용합니다.');
+        proceedWithGeneration();
+      }
+
+      // 실제 생성 로직
+      function proceedWithGeneration() {
+        console.log('🔥 proceedWithGeneration 함수 시작');
+        console.log('🔥 선택된 키워드 수:', selectedKeywords.length);
+        console.log('🔥 현재 글자수 설정:', currentCharCount);
+        console.log('🔥 현재 컨텐츠 스타일:', currentContentStyle);
+        
+        // 맥락 정보 수집
+        const context = {
+          observationContext: document.getElementById('observationContext')?.value || '',
+          classActivity: document.getElementById('classActivity')?.value || '',
+          specialProgram: document.getElementById('specialProgram')?.value || '',
+          charCount: currentCharCount,
+          contentStyle: currentContentStyle
+        };
+        
+        console.log('🔥 전송할 context:', context);
+
+        try {
+          console.log('🔥 Google Apps Script 호출 시작');
+          google.script.run
+            .withSuccessHandler(function(result) {
+            console.log('🔥 Code.gs 응답:', result);
+            
+            // 🔄 로딩 인디케이터 숨기기
+            hideLoadingProgress();
+            
+            generateBtn.disabled = false;
+            generateBtn.innerHTML = '✨ 행동특성 생성';
+            
+            if (result && result.success) {
+              behaviorText = result.text;
+              
+              // behaviorTextInput 요소가 있는지 확인
+              const behaviorTextInput = document.getElementById('behaviorTextInput');
+              if (behaviorTextInput) {
+                behaviorTextInput.value = result.text;
+              }
+              
+              if (typeof updateComplianceIndicators === 'function') {
+                updateComplianceIndicators(result.compliance);
+              }
+              
+              // 🔥 핵심: 실시간 미리보기 업데이트 (이제 textarea 사용)
+              const mainTextarea = document.getElementById('behaviorPreview');
+              if (mainTextarea) {
+                mainTextarea.value = result.text;
+                updatePreviewFromTextarea();
+              }
+              
+              if (typeof updateBehaviorPreview === 'function') {
+                updateBehaviorPreview(result.text, true, result.generated === 'ai');
+              }
+              
+              // 💾 학생별 행동특성 데이터 저장
+              const currentStudent = getCurrentStudentInfo();
+              if (currentStudent) {
+                const saved = saveStudentBehaviorData(
+                  currentStudent,
+                  result.text,
+                  result.compliance,
+                  selectedKeywords.map(k => k.text)
+                );
+                
+                if (saved) {
+                  console.log(`✅ ${currentStudent.name} 학생 데이터 저장 완료`);
+                  showAlert(`📚 ${currentStudent.name} 학생의 행동특성이 저장되었습니다!`, 'success');
+                  
+                  // 다음 학생을 위해 학생 정보 초기화
+                  setTimeout(() => {
+                    document.getElementById('studentNumber').value = '';
+                    document.getElementById('studentName').value = '';
+                    updateStudentInfo();
+                  }, 1000);
+                }
+              }
+              
+              // 🎯 자동 탭 전환 제거 - 사용자가 수동으로 이동하도록 변경
+              setTimeout(() => {
+                console.log('📝 행동특성 생성 완료 - 자동 탭 전환 없이 유지');
+                // 자동 탭 전환 비활성화 - 사용자가 여러 학생 처리 가능하도록 함
+                // if (typeof switchTab === 'function') {
+                //   switchTab('records');
+                // }
+                if (typeof updateBehaviorTabContent === 'function') {
+                  console.log('📝 행동특성 내용 업데이트 중...');
+                  updateBehaviorTabContent(result.text, result.generated === 'ai', result.compliance);
+                } else {
+                  console.error('❌ updateBehaviorTabContent 함수를 찾을 수 없습니다');
+                }
+              }, 500);
+              
+              // AI 생성 여부 표시
+              if (result.generated === 'ai') {
+                showAlert('🤖 AI로 생성된 전문 행동특성입니다! 누가기록 탭에서 확인하세요.', 'success');
+                updateUsageStats({ 
+                  today: usageStats.today + 1, 
+                  month: usageStats.month + 1, 
+                  total: usageStats.total + 1 
+                });
+              } else {
+                console.log('🔥 기본 생성된 이유:', result.fallbackReason || '알 수 없음');
+                showAlert('📝 기본 방식으로 생성된 행동특성입니다. (AI 생성 실패: ' + (result.fallbackReason || '알 수 없음') + ')', 'info');
+              }
+            } else {
+              console.error('🔥 응답 결과가 비정상:', result);
+              showAlert('행동특성 생성 실패: ' + (result?.message || '알 수 없는 오류'), 'error');
+            }
+          })
+          .withFailureHandler(function(error) {
+            console.error('🔥 Google Apps Script 호출 실패:', error);
+            
+            // 🔄 로딩 인디케이터 숨기기
+            hideLoadingProgress();
+            
+            generateBtn.disabled = false;
+            generateBtn.innerHTML = '✨ 행동특성 생성';
+            showAlert('생성 중 오류 발생: ' + error.message, 'error');
+          })
+          .generateBehaviorCharacteristics(selectedKeywords, context);
+        } catch (error) {
+          console.error('🔥 proceedWithGeneration 예외:', error);
+          
+          // 🔄 로딩 인디케이터 숨기기
+          hideLoadingProgress();
+          
+          generateBtn.disabled = false;
+          generateBtn.innerHTML = '✨ 행동특성 생성';
+          showAlert('행동특성 생성 중 오류가 발생했습니다.', 'error');
+        }
+      } // proceedWithGeneration 함수 닫기
+    } // generateBehaviorText 함수 닫기
+
+    // 수동 편집을 위한 새로운 함수들
+    function updatePreviewFromTextarea() {
+      const textarea = document.getElementById('behaviorPreview');
+      const charCountDisplay = document.getElementById('charCountDisplay');
+      
+      if (textarea && charCountDisplay) {
+        const currentLength = textarea.value.length;
+        charCountDisplay.textContent = `${currentLength}자`;
+        
+        // 글자수에 따른 색상 변경
+        if (currentLength > 500) {
+          charCountDisplay.style.color = '#dc3545';
+          charCountDisplay.textContent += ' (초과)';
+        } else if (currentLength > 450) {
+          charCountDisplay.style.color = '#fd7e14';
+        } else {
+          charCountDisplay.style.color = '#28a745';
+        }
+        
+        // 실시간 NEIS 규정 검사
+        if (currentLength > 0) {
+          updateComplianceCheck(textarea.value);
+        }
+      }
+    }
+    
+    function clearBehaviorText() {
+      const textarea = document.getElementById('behaviorPreview');
+      if (textarea) {
+        textarea.value = '';
+        updatePreviewFromTextarea();
+        textarea.focus();
+      }
+    }
+    
+    function formatBehaviorText() {
+      const textarea = document.getElementById('behaviorPreview');
+      if (textarea && textarea.value.trim()) {
+        let text = textarea.value.trim();
+        
+        // 기본 정리
+        text = text.replace(/\s+/g, ' '); // 연속 공백 제거
+        text = text.replace(/\. +/g, '. '); // 마침표 후 공백 정리
+        
+        // 마지막에 마침표가 없으면 추가
+        if (!text.endsWith('.')) {
+          text += '.';
+        }
+        
+        textarea.value = text;
+        updatePreviewFromTextarea();
+        
+        // 사용자에게 피드백
+        showAlert('텍스트가 정리되었습니다.', 'success');
+      }
+    }
+    
+    function updateComplianceCheck(text) {
+      // NEIS 규정 검사 로직
+      if (!text || text.length === 0) {
+        // 빈 텍스트일 때 기본 상태로 리셋
+        const emptyCompliance = {
+          lengthOk: false,
+          endingOk: false,
+          contentOk: true,
+          length: 0
+        };
+        if (typeof updateComplianceIndicators === 'function') {
+          updateComplianceIndicators(emptyCompliance);
+        }
+        return;
+      }
+      
+      const compliance = {
+        lengthOk: text.length <= 500 && text.length >= 50,
+        endingOk: /(함|임|됨|음|을 보임|를 보임|에 해당함|으로 나타남|하는 모습을 보임|라고 할 수 있음)$/.test(text.trim()),
+        contentOk: !(/\d{4}년|\d{1,2}월|\d{1,2}일|\d{1,2}시|\d{1,2}분|김\w+|이\w+|박\w+|최\w+|정\w+|오늘|어제|내일/).test(text),
+        length: text.length
+      };
+      
+      // 규정 준수 상태 표시 업데이트
+      if (typeof updateComplianceIndicators === 'function') {
+        updateComplianceIndicators(compliance);
+      }
+      
+      // 메인 탭의 규정 검사 영역도 업데이트
+      updateMainTabCompliance(compliance);
+    }
+    
+    function updateMainTabCompliance(compliance) {
+      const complianceStatus = document.getElementById('complianceStatus');
+      if (!complianceStatus) return;
+      
+      // 규정 검사 영역 표시
+      complianceStatus.classList.remove('hidden');
+      
+      // 각 항목 업데이트
+      const lengthIcon = document.getElementById('lengthIcon');
+      const lengthCheck = document.getElementById('lengthCheck');
+      const endingIcon = document.getElementById('endingIcon');
+      const endingCheck = document.getElementById('endingCheck');
+      const contentIcon = document.getElementById('contentIcon');
+      const contentCheck = document.getElementById('contentCheck');
+      
+      if (lengthIcon && lengthCheck) {
+        lengthIcon.textContent = compliance.lengthOk ? '✅' : '❌';
+        lengthCheck.textContent = `글자 수: ${compliance.length || 0}/500자 ${compliance.lengthOk ? '(적합)' : '(부적합)'}`;
+        lengthCheck.style.color = compliance.lengthOk ? '#28a745' : '#dc3545';
+      }
+      
+      if (endingIcon && endingCheck) {
+        endingIcon.textContent = compliance.endingOk ? '✅' : '❌';
+        endingCheck.textContent = `명사형 종결 ${compliance.endingOk ? '(적합)' : '(부적합)'}`;
+        endingCheck.style.color = compliance.endingOk ? '#28a745' : '#dc3545';
+      }
+      
+      if (contentIcon && contentCheck) {
+        contentIcon.textContent = compliance.contentOk ? '✅' : '❌';
+        contentCheck.textContent = `금지 내용 ${compliance.contentOk ? '없음 (적합)' : '포함됨 (부적합)'}`;
+        contentCheck.style.color = compliance.contentOk ? '#28a745' : '#dc3545';
+      }
+    }
+
+    // 페이지 로드 시 초기화
+    document.addEventListener('DOMContentLoaded', function() {
+      // 초기 글자수 표시
+      updatePreviewFromTextarea();
+      
+      // textarea 입력 이벤트 리스너 등록
+      const textarea = document.getElementById('behaviorPreview');
+      if (textarea) {
+        // 실시간 글자수 및 규정 검사
+        textarea.addEventListener('input', updatePreviewFromTextarea);
+        
+        // 페이스트 이벤트도 처리
+        textarea.addEventListener('paste', function(e) {
+          setTimeout(updatePreviewFromTextarea, 100);
+        });
+      }
+    });
+
+    // 중복 이벤트 리스너 제거됨 - 위에서 통합됨
+
+    // 🔒 보안 강화: 입력값 검증 및 XSS 방지
+    function validateInput(input, maxLength = 30) {
+      if (typeof input !== 'string') return '';
+      // HTML 태그, 스크립트, 특수문자 제거
+      return input.trim()
+                  .replace(/[<>"`']/g, '')
+                  .replace(/javascript:/gi, '')
+                  .replace(/on\w+=/gi, '')
+                  .substring(0, maxLength);
+    }
+    
+    // DOM 안전 생성 함수
+    function createSafeElement(tag, className = '', textContent = '') {
+      const element = document.createElement(tag);
+      if (className) element.className = className;
+      if (textContent) element.textContent = validateInput(textContent, 1000);
+      return element;
+    }
+
+    // 🔥 프론트엔드에서 직접 누가기록 생성 (백엔드 우회)
+    async function generateCumulativeRecordsDirectly(studentsData, recordCount, dateSettings) {
+      console.log('🚀 프론트엔드 직접 생성 시작');
+      console.log('📝 학생 데이터:', studentsData);
+      console.log('📝 개수:', recordCount);
+      console.log('📅 날짜 설정:', dateSettings);
+      
+      try {
+        // API 키 확인
+        const apiKey = await getCurrentApiKey();
+        if (!apiKey) {
+          throw new Error('실제 GEMINI API 키가 설정되지 않았습니다. AI 설정 탭에서 AIza로 시작하는 API 키를 입력하고 테스트해주세요.');
+        }
+        
+        const results = [];
+        const year = dateSettings?.year || 2025;
+        const startMonth = dateSettings?.startMonth || 3;
+        const endMonth = dateSettings?.endMonth || 7;
+        
+        // 각 학생별로 누가기록 생성 (강화된 Rate Limiting 대응)
+        for (let i = 0; i < studentsData.length; i++) {
+          const student = studentsData[i];
+          console.log(`📚 ${student.name} 학생 처리 중... (${i + 1}/${studentsData.length})`);
+          
+          // 진행률 업데이트
+          const progressPercent = Math.round(((i) / studentsData.length) * 100);
+          const generateBtn = document.querySelector('button[onclick="generateStudentRecords()"]');
+          if (generateBtn) {
+            generateBtn.innerHTML = `⏳ 생성 중... ${student.name} (${i + 1}/${studentsData.length}) - ${progressPercent}%`;
+          }
+          
+          const studentRecords = [];
+          
+          // 학생별 처리 시작 전 대기 (Rate Limit 완화)
+          if (i > 0) {
+            console.log(`⏳ 학생 ${i + 1} 처리 전 3초 대기...`);
+            await new Promise(resolve => setTimeout(resolve, 3000));
+          }
+          
+          // 개별 누가기록 생성
+          for (let j = 0; j < recordCount; j++) {
+            console.log(`📝 ${student.name} - 누가기록 ${j + 1}/${recordCount} 생성 중`);
+            
+            try {
+              // GEMINI API 호출을 위한 프롬프트 생성
+              const prompt = createCumulativeRecordPrompt(student.behaviorText, 1);
+              
+              // 🔄 재시도 로직이 포함된 API 호출 (최대 5회 시도)
+              const response = await callGeminiApiWithRetry(apiKey, prompt, 5);
+              
+              if (!response.ok) {
+                throw new Error(`API 호출 실패: ${response.status} ${response.statusText}`);
+              }
+              
+              const data = await response.json();
+              console.log('🎯 GEMINI API 응답:', data);
+              
+              if (!data.candidates || !data.candidates[0] || !data.candidates[0].content) {
+                throw new Error('API 응답이 올바르지 않습니다.');
+              }
+              
+              let generatedText = data.candidates[0].content.parts[0].text;
+              
+              // JSON 형태인 경우 파싱 시도
+              if (generatedText.includes('{') && generatedText.includes('}')) {
+                try {
+                  const parsed = JSON.parse(generatedText);
+                  if (parsed.record) {
+                    generatedText = parsed.record;
+                  } else if (Array.isArray(parsed) && parsed[0] && parsed[0].record) {
+                    generatedText = parsed[0].record;
+                  }
+                } catch (parseError) {
+                  // JSON 파싱 실패 시 정규식으로 추출
+                  const match = generatedText.match(/"record":\s*"([^"]+)"/);
+                  if (match && match[1]) {
+                    generatedText = match[1];
+                  }
+                }
+              }
+              
+              // 텍스트 정리
+              generatedText = generatedText
+                .replace(/^["']|["']$/g, '')
+                .replace(/\\n/g, ' ')
+                .replace(/\\"/g, '"')
+                .trim();
+              
+              // NEIS 규정 준수 확인
+              if (!checkRecordCompliance(generatedText)) {
+                generatedText = ensureRecordCompliance(generatedText);
+              }
+              
+              // 랜덤 날짜 생성
+              const randomDate = generateRandomSchoolDate(year, startMonth, endMonth);
+              const formattedDate = formatDate(randomDate);
+              
+              studentRecords.push({
+                text: generatedText,
+                date: formattedDate,
+                rawDate: randomDate
+              });
+              
+              console.log(`✅ ${student.name} - 누가기록 ${j + 1} 생성 완료`);
+              
+              // API 호출 간격 조절 강화 (Rate Limit 대응)
+              console.log(`⏳ 다음 API 호출까지 5초 대기...`);
+              await new Promise(resolve => setTimeout(resolve, 5000));
+              
+            } catch (recordError) {
+              console.error(`❌ ${student.name} - 누가기록 ${j + 1} 생성 실패:`, recordError);
+              
+              // Rate Limit 오류인 경우 더 긴 대기
+              if (recordError.message && recordError.message.includes('429')) {
+                console.log(`⏳ Rate Limit 오류 - 추가 15초 대기...`);
+                await new Promise(resolve => setTimeout(resolve, 15000));
+              }
+              
+              // 폴백 누가기록 생성
+              const fallbackText = `${student.name} 학생의 누가기록 ${j + 1} (생성 오류)`;
+              const randomDate = generateRandomSchoolDate(year, startMonth, endMonth);
+              const formattedDate = formatDate(randomDate);
+              
+              studentRecords.push({
+                text: fallbackText,
+                date: formattedDate,
+                rawDate: randomDate
+              });
+            }
+          }
+          
+          results.push({
+            studentNumber: student.number,
+            studentName: student.name,
+            records: studentRecords,
+            behaviorText: student.behaviorText,
+            keywords: student.keywords || []
+          });
+        }
+        
+        console.log('🎉 모든 학생 누가기록 생성 완료:', results);
+        
+        return {
+          success: true,
+          records: results,
+          totalStudents: studentsData.length,
+          recordsPerStudent: recordCount,
+          totalRecords: results.reduce((sum, student) => sum + student.records.length, 0)
+        };
+        
+      } catch (error) {
+        console.error('❌ 프론트엔드 생성 오류:', error);
+        
+        return {
+          success: false,
+          error: error.message,
+          message: '누가기록 생성 중 오류가 발생했습니다: ' + error.message,
+          records: [],
+          totalStudents: studentsData?.length || 0,
+          recordsPerStudent: recordCount || 5,
+          totalRecords: 0
+        };
+      }
+    }
+    
+    // 누가기록 생성을 위한 프롬프트 생성 (열린 형태로 개선)
+    function createCumulativeRecordPrompt(behaviorText, count) {
+      // 다양성을 위한 랜덤 변수 생성
+      const diversityElements = [
+        "학습 태도와 참여 모습",
+        "동료와의 협력 관계",
+        "문제 해결 접근 방식",
+        "학습 과정에서의 특성",
+        "과제 수행 시의 모습",
+        "표현 및 소통 능력",
+        "학습에 대한 관심과 노력"
+      ];
+      
+      const randomElement = diversityElements[Math.floor(Math.random() * diversityElements.length)];
+      const timestamp = Date.now(); // 유니크한 요소 추가
+      
+      return `당신은 대한민국 초등학교 교사를 돕는 AI 조수입니다. 주어진 '행동특성 및 종합의견'을 바탕으로, 학생의 ${randomElement}을 중심으로 ${count}개의 **완전히 다른** 누가기록을 생성해야 합니다.
+
+### 🎯 열린 형태 누가기록 작성 지침 (매우 중요!)
+1. **일반적 표현**: 모든 학생에게 적용 가능한 일반적인 표현 사용
+2. **구체적 상황 금지**: "찰흙으로", "오답노트를", "친구의 작품이 무너져서" 등 구체적 상황 서술 금지
+3. **추상적 행동**: "협력하여", "노력하며", "집중하여" 등 추상적이고 일반적인 행동 중심
+4. **보편적 맥락**: 어떤 학급, 어떤 상황에서도 활용 가능한 내용
+5. **특정 도구/상황 배제**: 특정 교구, 구체적 사건, 고유한 상황 언급 금지
+
+### 🚫 내용 중복 방지 원칙 (절대 중요!)
+1. **완전한 차별화**: 각 누가기록은 완전히 다른 관찰 관점에서 작성
+2. **유사 표현 금지**: 비슷한 동사, 형용사, 문장 구조 사용 금지
+3. **다양한 영역 활용**: 학습태도, 협력관계, 문제해결, 표현능력, 참여도 등 다른 영역 중심
+4. **부분 중복 배제**: 문장의 일부분이라도 유사한 내용 포함 금지
+5. **독창적 서술**: 각각의 기록이 독립적이고 독창적인 관찰 내용이어야 함
+
+### 🎨 다양성 확보 전략
+- **1번째 기록**: 학습 참여 태도 중심
+- **2번째 기록**: 동료 관계 및 협력 중심  
+- **3번째 기록**: 문제 해결 방식 중심
+- **4번째 기록**: 표현 및 소통 능력 중심
+- **5번째 기록**: 학습 관리 및 성찰 중심
+
+### 🚫 피해야 할 구체적 표현 예시
+- "찰흙으로 인물상을 만들 때" → "창작 활동 시"
+- "친구의 작품이 무너지자" → "어려움에 직면한 친구를 도우며"
+- "오답노트를 꼼꼼하게 작성하고" → "학습 내용을 정리하고"
+- "인터넷 검색을 통해" → "다양한 방법으로"
+
+### ✅ 권장하는 일반적 표현 예시 (각각 다른 영역)
+- "학습 활동에 적극적으로 참여하며" (참여도)
+- "동료와 협력하여 과제를 수행하고" (협력관계)
+- "어려운 문제에 끈기 있게 도전하며" (문제해결)
+- "자신의 생각을 명확하게 표현하고" (표현능력)
+- "학습 과정을 체계적으로 관리하며" (학습관리)
+
+### ★★★★★ 반드시 지켜야 할 출력 규칙 ★★★★★
+1. **주어 생략:** 관찰 기록처럼 주어('한 학생은', '자신이' 등)를 완전히 생략하고, 바로 행동 서술로 시작해야 함
+2. **날짜/시간 금지:** 누가기록 내용에 '3월 15일', '1교시'와 같은 구체적인 날짜나 시간을 절대 포함하지 말 것
+3. **마침표 필수:** 모든 문장의 끝에 반드시 마침표(.)를 찍어야 함
+4. **명사형 종결 + 마침표:** '~함.', '~음.', '~을 보임.' 형태로 종결
+5. **일반성 유지:** 어떤 학생에게도 적용 가능한 일반적인 내용으로 작성
+6. **완전 차별화:** 각 기록은 완전히 다른 내용과 표현으로 작성
+
+---
+**[학생의 행동특성 및 종합의견]**
+${behaviorText}
+---
+
+**생성 요구사항 (중요!):**
+- ${count}개의 누가기록은 **완전히 다른 내용**이어야 합니다 (유사한 단어, 표현, 구조 사용 금지)
+- 각 기록은 **다른 관찰 영역**에 초점을 맞춰 작성 (학습태도/협력관계/문제해결/표현능력/학습관리 등)
+- 구체적 상황보다는 일반적인 학습 태도와 특성 중심으로 작성
+- 반드시 마침표(.)로 끝나야 합니다
+- 글자 수: 100자~150자 내외로 작성
+- 반드시 주어진 행동특성을 근거로 작성
+- 모든 학급에서 활용 가능한 열린 형태로 작성
+- **중복 체크**: 생성 후 각 기록이 서로 다른지 반드시 확인
+- 유니크 ID: ${timestamp}
+
+JSON 형식 예시:
+[{"record": "학습 활동에 적극적으로 참여하며 동료들과 협력하여 과제를 완수하는 모습을 보임."}]`;
+    }
+    
+    // 현재 API 키 가져오기 (전역 변수에서)
+    async function getCurrentApiKey() {
+      try {
+        console.log('📱 현재 API 키 확인 중...');
+        console.log('📱 전역 geminiApiKey:', geminiApiKey ? '설정됨' : '미설정');
+        
+        // 전역 변수에서 먼저 확인 (플래그 값 제외)
+        if (geminiApiKey && geminiApiKey.length > 10 && geminiApiKey !== 'API_KEY_AVAILABLE' && geminiApiKey.startsWith('AIza')) {
+          console.log('✅ 전역 변수에서 API 키 발견:', geminiApiKey.substring(0, 4) + '...');
+          return geminiApiKey;
+        }
+        
+        // localStorage에서 확인 (플래그 값 제외)
+        const storedKey = localStorage.getItem('geminiApiKey');
+        if (storedKey && storedKey.length > 10 && storedKey !== 'API_KEY_AVAILABLE' && storedKey.startsWith('AIza')) {
+          console.log('✅ localStorage에서 API 키 발견:', storedKey.substring(0, 4) + '...');
+          geminiApiKey = storedKey; // 전역 변수에도 설정
+          return storedKey;
+        }
+        
+        console.log('❌ 유효한 API 키를 찾을 수 없음 (플래그 값 또는 잘못된 형식)');
+        console.log('💡 AI 설정 탭에서 실제 GEMINI API 키를 입력해주세요');
+        return null;
+        
+      } catch (error) {
+        console.error('API 키 가져오기 오류:', error);
+        return null;
+      }
+    }
+    
+    // 누가기록 규정 준수 확인 (100-150자 기준)
+    function checkRecordCompliance(text) {
+      if (!text || typeof text !== 'string') return false;
+      
+      // 길이 확인 (100-150자)
+      if (text.length < 100 || text.length > 150) return false;
+      
+      // 마침표 확인
+      if (!text.endsWith('.')) return false;
+      
+      // 명사형 종결 + 마침표 확인
+      if (!/(함\.|임\.|됨\.|음\.|을 보임\.|를 보임\.|에 해당함\.|으로 나타남\.|하는 모습을 보임\.|라고 할 수 있음\.)$/.test(text.trim())) return false;
+      
+      // 금지 내용 확인 (날짜, 시간, 구체적 고유명사)
+      if (/\d{4}년|\d{1,2}월|\d{1,2}일|\d{1,2}시|\d{1,2}분|김\w+|이\w+|박\w+|최\w+|정\w+|오늘|어제|내일/.test(text)) return false;
+      
+      return true;
+    }
+    
+    // 누가기록 규정 준수 보정 (100-150자 기준)
+    function ensureRecordCompliance(text) {
+      if (!text || typeof text !== 'string') return '학습 활동에 성실히 참여하고 꾸준히 노력하는 모습을 보임.';
+      
+      // 마침표 추가
+      if (!text.endsWith('.')) {
+        text = text.replace(/[.!?]+$/, '') + '.';
+      }
+      
+      // 길이 조정 (100-150자)
+      if (text.length > 150) {
+        text = text.substring(0, 147) + '...';
+      } else if (text.length < 100) {
+        const addText = '하며 지속적으로 노력하는 모습을 보임.';
+        text = text.replace(/\.$/, '') + addText;
+      }
+      
+      // 명사형 종결 + 마침표 보정
+      if (!/(함\.|임\.|됨\.|음\.|을 보임\.|를 보임\.|에 해당함\.|으로 나타남\.|하는 모습을 보임\.|라고 할 수 있음\.)$/.test(text.trim())) {
+        text = text.replace(/[.!?]+$/, '') + '하는 모습을 보임.';
+      }
+      
+      // 금지 내용 제거
+      text = text.replace(/\d{4}년|\d{1,2}월|\d{1,2}일|\d{1,2}시|\d{1,2}분|오늘|어제|내일/g, '');
+      text = text.replace(/김\w+|이\w+|박\w+|최\w+|정\w+/g, '');
+      
+      return text.trim();
+    }
+    
+    // 랜덤 학교 날짜 생성
+    function generateRandomSchoolDate(year, startMonth, endMonth) {
+      const allWeekdays = [];
+      
+      for (let month = startMonth; month <= endMonth; month++) {
+        const date = new Date(year, month - 1, 1);
+        while (date.getMonth() === month - 1) {
+          const day = date.getDay();
+          if (day > 0 && day < 6) { // 월~금
+            allWeekdays.push(new Date(date));
+          }
+          date.setDate(date.getDate() + 1);
+        }
+      }
+      
+      // 랜덤 선택
+      const randomIndex = Math.floor(Math.random() * allWeekdays.length);
+      return allWeekdays[randomIndex] || new Date(year, startMonth - 1, 15);
+    }
+    
+    // 날짜 포맷팅
+    function formatDate(date) {
+      const weekdays = ['일', '월', '화', '수', '목', '금', '토'];
+      const year = date.getFullYear();
+      const month = String(date.getMonth() + 1).padStart(2, '0');
+      const day = String(date.getDate()).padStart(2, '0');
+      const weekday = weekdays[date.getDay()];
+      
+      return `${year}.${month}.${day} (${weekday})`;
+    }
+    
+    // 🔄 지수 백오프와 재시도 로직이 포함된 GEMINI API 호출
+    async function callGeminiApiWithRetry(apiKey, prompt, maxRetries = 3) {
+      for (let attempt = 1; attempt <= maxRetries; attempt++) {
+        try {
+          console.log(`🔄 API 호출 시도 ${attempt}/${maxRetries}`);
+          
+          const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-exp:generateContent?key=${apiKey}`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              contents: [{
+                parts: [{
+                  text: prompt
+                }]
+              }],
+              generationConfig: {
+                temperature: 0.7,
+                topK: 40,
+                topP: 0.95,
+                maxOutputTokens: 1000,
+              }
+            })
+          });
+          
+          // 성공적인 응답
+          if (response.ok) {
+            console.log(`✅ API 호출 성공 (시도 ${attempt})`);
+            return response;
+          }
+          
+          // 429 오류 (Rate Limit) 처리 - 더 긴 대기 시간
+          if (response.status === 429) {
+            if (attempt < maxRetries) {
+              // 강화된 지수 백오프: 2^attempt * 10초 + 더 긴 랜덤 지연
+              const baseDelay = Math.pow(2, attempt) * 10000; // 10초 기본
+              const jitterDelay = Math.random() * 5000; // 0-5초 랜덤
+              const totalDelay = baseDelay + jitterDelay;
+              
+              console.warn(`⚠️ Rate limit 오류 (429), ${(totalDelay/1000).toFixed(1)}초 후 재시도...`);
+              await new Promise(resolve => setTimeout(resolve, totalDelay));
+              continue;
+            }
+          }
+          
+          // 503 서비스 사용 불가 오류 처리
+          if (response.status === 503) {
+            if (attempt < maxRetries) {
+              const serviceDelay = Math.pow(2, attempt) * 5000; // 5초 기본
+              console.warn(`⚠️ 서비스 사용 불가 오류 (503), ${(serviceDelay/1000).toFixed(1)}초 후 재시도...`);
+              await new Promise(resolve => setTimeout(resolve, serviceDelay));
+              continue;
+            }
+          }
+          
+          // 기타 4xx, 5xx 오류
+          if (response.status >= 400) {
+            throw new Error(`API 오류: ${response.status} ${response.statusText}`);
+          }
+          
+        } catch (error) {
+          console.error(`❌ API 호출 시도 ${attempt} 실패:`, error);
+          
+          if (attempt === maxRetries) {
+            throw error;
+          }
+          
+          // 네트워크 오류 등에 대한 재시도 지연
+          const retryDelay = 1000 * attempt;
+          console.log(`🔄 ${retryDelay}ms 후 재시도...`);
+          await new Promise(resolve => setTimeout(resolve, retryDelay));
+        }
+      }
+      
+      throw new Error(`${maxRetries}번의 시도 후에도 API 호출 실패`);
+    }
+    
+  </script>
+  
+  <!-- 푸터 영역 -->
+  <div style="margin-top: 3rem; padding: 2rem; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border-radius: 20px; text-align: center; box-shadow: 0 8px 25px rgba(0,0,0,0.1);">
+    <div style="margin-bottom: 1rem;">
+      <h3 style="color: white; margin-bottom: 0.5rem; font-size: 1.4rem;">🎓 누가기록 생성기 Complete System</h3>
+      <p style="color: #E8EAF6; font-size: 1.1rem; margin: 0;">교육현장의 효율성을 높이는 AI 기반 누가기록 자동 생성 도구</p>
+    </div>
+    
+    <div style="border-top: 1px solid rgba(255,255,255,0.3); padding-top: 1.5rem; margin-top: 1.5rem;">
+      <div style="display: flex; justify-content: center; align-items: center; flex-wrap: wrap; gap: 2rem;">
+        <div style="display: flex; align-items: center; gap: 0.5rem;">
+          <span style="font-size: 1.2rem;">👤</span>
+          <span style="font-weight: 600;">개발자: 김문정(박달초)</span>
+        </div>
+        <div style="display: flex; align-items: center; gap: 0.5rem;">
+          <span style="font-size: 1.2rem;">📺</span>
+          <span>유튜브: </span>
+          <a href="https://www.youtube.com/@%EB%B0%B0%EC%9B%80%EC%9D%98%EB%8B%AC%EC%9D%B8-p5v" target="_blank" style="color: #FFE082; text-decoration: none; font-weight: 600; border-bottom: 1px solid #FFE082; transition: all 0.3s ease;" onmouseover="this.style.color='#FFF59D'" onmouseout="this.style.color='#FFE082'">배움의달인</a>
+        </div>
+      </div>
+      
+      <div style="margin-top: 1rem; font-size: 0.9rem; color: #E8EAF6; opacity: 0.8;">
+        <p style="margin: 0;">© 2025 김문정. 교육용으로 자유롭게 사용하세요. 문의는 유튜브 채널로 연락주세요.</p>
+      </div>
+    </div>
+  </div>
+
+</body>
+</html>
