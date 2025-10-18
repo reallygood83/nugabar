@@ -260,7 +260,7 @@ export default function SettingsPage() {
                   className="w-full p-3 border rounded-lg font-mono text-sm"
                 />
                 <p className="text-xs text-muted-foreground mt-1">
-                  API 키는 AES-256-GCM 암호화되어 Firestore에 안전하게 저장됩니다
+                  API 키는 안전하게 암호화되어 저장됩니다
                 </p>
               </div>
 
@@ -429,22 +429,6 @@ export default function SettingsPage() {
                   💡 설정한 휴업일은 누가기록 생성 시 자동으로 반영됩니다. 학생별 결석일은 누가기록 생성 페이지에서 별도로 입력할 수 있습니다.
                 </p>
               </div>
-            </CardContent>
-          </Card>
-
-          {/* Security Info */}
-          <Card>
-            <CardHeader>
-              <CardTitle>🛡️ 보안 정보</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-2 text-sm text-muted-foreground">
-              <ul className="space-y-1">
-                <li>• API 키는 AES-256-GCM 암호화되어 저장됩니다</li>
-                <li>• 암호화 키는 환경변수로 서버에만 존재합니다</li>
-                <li>• 각 사용자는 자신의 API 키만 사용합니다</li>
-                <li>• API 키는 절대 로그나 분석 도구에 저장되지 않습니다</li>
-                <li>• Firebase Security Rules로 다른 사용자 접근 차단</li>
-              </ul>
             </CardContent>
           </Card>
         </div>
