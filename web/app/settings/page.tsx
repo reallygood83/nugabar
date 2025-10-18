@@ -335,7 +335,7 @@ export default function SettingsPage() {
 
               <div className="p-3 bg-blue-50 border border-blue-200 rounded-lg mt-4">
                 <p className="text-sm text-blue-800">
-                  💡 <strong>무료 사용량:</strong> Gemini API는 월 60회 무료로 제공됩니다.
+                  💡 <strong>무료 사용량:</strong> Gemini API는 무료 티어로 제공됩니다.
                   자세한 내용은{' '}
                   <a
                     href="https://ai.google.dev/pricing"
