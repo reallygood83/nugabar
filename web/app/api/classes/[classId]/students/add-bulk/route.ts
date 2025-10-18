@@ -17,8 +17,7 @@ export async function POST(
       );
     }
 
-    // Firestore batch 작업 준비
-    const batch = db.batch();
+    // Firestore 컬렉션 참조
     const studentsCollectionRef = db
       .collection('users')
       .doc(uid)
@@ -28,28 +27,29 @@ export async function POST(
 
     const addedStudents: Array<{ number: number; maskedName: string }> = [];
 
-    // 각 학생 추가
-    for (const student of students) {
+    // 각 학생 추가 (병렬 처리)
+    const addPromises = students.map(async (student) => {
       const { number, name } = student;
 
       if (!number || !name) {
-        continue; // 필수 정보가 없으면 건너뛰기
+        return null; // 필수 정보가 없으면 건너뛰기
       }
 
       const maskedName = maskName(name.trim());
-      const studentRef = studentsCollectionRef.doc();
 
-      batch.set(studentRef, {
+      // Firebase add() 메서드로 자동 생성 ID 사용
+      await studentsCollectionRef.add({
         number: parseInt(number),
         maskedName,
         createdAt: new Date().toISOString(),
       });
 
-      addedStudents.push({ number: parseInt(number), maskedName });
-    }
+      return { number: parseInt(number), maskedName };
+    });
 
-    // Batch 실행
-    await batch.commit();
+    // 모든 학생 추가 대기
+    const results = await Promise.all(addPromises);
+    addedStudents.push(...results.filter((r) => r !== null) as Array<{ number: number; maskedName: string }>);
 
     // 학급의 학생 수 업데이트
     const studentsSnapshot = await studentsCollectionRef.get();
