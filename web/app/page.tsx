@@ -35,14 +35,25 @@ export default function Home() {
               </div>
             </div>
             {user && (
-              <Button
-                onClick={logout}
-                variant="ghost"
-                size="sm"
-                className="text-gray-600 hover:text-gray-900 hover:bg-gray-100 transition-all"
-              >
-                로그아웃
-              </Button>
+              <div className="flex items-center gap-2">
+                <Link href="/settings">
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="text-gray-600 hover:text-gray-900 hover:bg-gray-100 transition-all"
+                  >
+                    ⚙️ 설정
+                  </Button>
+                </Link>
+                <Button
+                  onClick={logout}
+                  variant="ghost"
+                  size="sm"
+                  className="text-gray-600 hover:text-gray-900 hover:bg-gray-100 transition-all"
+                >
+                  로그아웃
+                </Button>
+              </div>
             )}
           </div>
         </div>
