@@ -82,8 +82,8 @@ export async function POST(
     // 엑셀 파일 생성
     const excelBuffer = generateClassExcel(allRecords, className);
 
-    // Response 반환 (Buffer는 자동으로 ArrayBuffer로 변환됨)
-    return new Response(excelBuffer, {
+    // Response 반환 (Buffer를 Uint8Array로 변환)
+    return new Response(new Uint8Array(excelBuffer), {
       status: 200,
       headers: {
         'Content-Type': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
