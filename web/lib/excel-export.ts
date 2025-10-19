@@ -18,12 +18,12 @@ export interface StudentRecord {
  * 학급 전체 누가기록을 Excel 파일로 생성합니다.
  * @param records - 누가기록 배열
  * @param className - 학급명
- * @returns Excel 파일 ArrayBuffer
+ * @returns Excel 파일 Buffer
  */
 export function generateClassExcel(
   records: StudentRecord[],
   className: string
-): ArrayBuffer {
+): Buffer {
   // 데이터를 Excel 형식으로 변환
   const data = records.map((record) => ({
     번호: record.studentNumber,
@@ -52,20 +52,21 @@ export function generateClassExcel(
   const workbook = XLSX.utils.book_new();
   XLSX.utils.book_append_sheet(workbook, worksheet, className);
 
-  // Excel 파일로 변환 (ArrayBuffer 형태)
-  return XLSX.write(workbook, { type: 'array', bookType: 'xlsx' }) as ArrayBuffer;
+  // Excel 파일로 변환 (Uint8Array를 Buffer로 변환)
+  const uint8Array = XLSX.write(workbook, { type: 'array', bookType: 'xlsx' });
+  return Buffer.from(uint8Array);
 }
 
 /**
  * 개별 학생 누가기록을 Excel 파일로 생성합니다.
  * @param records - 학생의 누가기록 배열
  * @param studentName - 학생 이름 (마스킹된 이름)
- * @returns Excel 파일 ArrayBuffer
+ * @returns Excel 파일 Buffer
  */
 export function generateStudentExcel(
   records: Omit<StudentRecord, 'studentName' | 'studentNumber'>[],
   studentName: string
-): ArrayBuffer {
+): Buffer {
   const data = records.map((record, index) => ({
     순번: index + 1,
     생성일: record.createdAt,
@@ -88,5 +89,6 @@ export function generateStudentExcel(
   const workbook = XLSX.utils.book_new();
   XLSX.utils.book_append_sheet(workbook, worksheet, studentName);
 
-  return XLSX.write(workbook, { type: 'array', bookType: 'xlsx' }) as ArrayBuffer;
+  const uint8Array = XLSX.write(workbook, { type: 'array', bookType: 'xlsx' });
+  return Buffer.from(uint8Array);
 }
