@@ -37,7 +37,6 @@ export default function ClassDetailPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [isAddingStudent, setIsAddingStudent] = useState(false);
   const [showAddForm, setShowAddForm] = useState(false);
-  const [isExporting, setIsExporting] = useState(false);
 
   // 학생 추가 폼 상태
   const [studentNumber, setStudentNumber] = useState('1');
@@ -225,39 +224,6 @@ export default function ClassDetailPage() {
     }
   };
 
-  const handleExportExcel = async () => {
-    if (!user) return;
-
-    setIsExporting(true);
-    try {
-      const response = await fetch(`/api/classes/${classId}/export`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ uid: user.uid }),
-      });
-
-      if (!response.ok) {
-        throw new Error('엑셀 다운로드 실패');
-      }
-
-      const blob = await response.blob();
-      const url = window.URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = `${classData?.className || '학급'}_누가기록.xlsx`;
-      document.body.appendChild(a);
-      a.click();
-      window.URL.revokeObjectURL(url);
-      document.body.removeChild(a);
-
-      alert('✅ 엑셀 파일이 다운로드되었습니다!');
-    } catch (error) {
-      console.error('엑셀 다운로드 오류:', error);
-      alert('❌ 엑셀 다운로드 중 오류가 발생했습니다.');
-    } finally {
-      setIsExporting(false);
-    }
-  };
 
   if (!user) {
     return (
@@ -298,21 +264,12 @@ export default function ClassDetailPage() {
                 <CardTitle>👥 학생 목록</CardTitle>
                 <CardDescription>등록된 학생: {students.length}명</CardDescription>
               </div>
-              <div className="flex gap-2">
-                <Button
-                  onClick={handleExportExcel}
-                  disabled={isExporting || students.length === 0}
-                  className="bg-green-600 hover:bg-green-700"
-                >
-                  {isExporting ? '다운로드 중...' : '📊 엑셀 다운로드'}
-                </Button>
-                <Button
-                  onClick={() => setShowAddForm(!showAddForm)}
-                  className="bg-blue-600 hover:bg-blue-700"
-                >
-                  {showAddForm ? '❌ 취소' : '➕ 학생 추가'}
-                </Button>
-              </div>
+              <Button
+                onClick={() => setShowAddForm(!showAddForm)}
+                className="bg-blue-600 hover:bg-blue-700"
+              >
+                {showAddForm ? '❌ 취소' : '➕ 학생 추가'}
+              </Button>
             </div>
           </CardHeader>
           <CardContent>
