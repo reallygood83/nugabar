@@ -48,6 +48,7 @@ export default function NavigationHeader() {
     { label: '학급 관리', path: '/class-management', icon: '🏫' },
     { label: '행동특성 생성', path: '/behavior-characteristics', icon: '✨' },
     { label: '누가기록 생성', path: '/cumulative-records', icon: '📝' },
+    { label: '창체 누가기록', path: '/creative-activities', icon: '🎨' },
     { label: '설정', path: '/settings', icon: '⚙️' },
   ];
 

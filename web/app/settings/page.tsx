@@ -22,10 +22,15 @@ export default function SettingsPage() {
   const [schoolName, setSchoolName] = useState('');
   const [isSavingSchoolName, setIsSavingSchoolName] = useState(false);
 
+  // Gemini 모델 설정
+  const [geminiModel, setGeminiModel] = useState('gemini-2.0-flash');
+  const [isSavingModel, setIsSavingModel] = useState(false);
+
   useEffect(() => {
     checkApiKey();
     loadSchoolClosures();
     loadSchoolName();
+    loadGeminiModel();
   }, [user]);
 
   const loadSchoolClosures = async () => {
@@ -63,6 +68,25 @@ export default function SettingsPage() {
       }
     } catch (error) {
       console.error('학교명 불러오기 오류:', error);
+    }
+  };
+
+  const loadGeminiModel = async () => {
+    if (!user?.uid) return;
+
+    try {
+      const response = await fetch('/api/settings/get-gemini-model', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ uid: user.uid }),
+      });
+
+      const data = await response.json();
+      if (data.success && data.geminiModel) {
+        setGeminiModel(data.geminiModel);
+      }
+    } catch (error) {
+      console.error('Gemini 모델 불러오기 오류:', error);
     }
   };
 
@@ -222,6 +246,31 @@ export default function SettingsPage() {
     }
   };
 
+  const handleSaveGeminiModel = async () => {
+    setIsSavingModel(true);
+    try {
+      const response = await fetch('/api/settings/save-gemini-model', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          uid: user?.uid,
+          geminiModel: geminiModel,
+        }),
+      });
+
+      const data = await response.json();
+      if (data.success) {
+        alert('✅ Gemini 모델이 저장되었습니다!');
+      } else {
+        alert('❌ 저장 실패: ' + data.error);
+      }
+    } catch (error) {
+      alert('❌ 저장 중 오류가 발생했습니다.');
+    } finally {
+      setIsSavingModel(false);
+    }
+  };
+
   return (
     <div className="min-h-screen bg-background">
       <NavigationHeader />
@@ -306,6 +355,52 @@ export default function SettingsPage() {
                   </p>
                 </div>
               )}
+            </CardContent>
+          </Card>
+
+          {/* Gemini Model Selection */}
+          <Card>
+            <CardHeader>
+              <CardTitle>🤖 Gemini AI 모델 선택</CardTitle>
+              <CardDescription>
+                창체 누가기록 생성에 사용할 Gemini 모델을 선택합니다
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div>
+                <label className="text-sm font-medium mb-2 block">
+                  사용할 모델
+                </label>
+                <select
+                  value={geminiModel}
+                  onChange={(e) => setGeminiModel(e.target.value)}
+                  className="w-full p-3 border rounded-lg bg-white"
+                >
+                  <option value="gemini-2.0-flash">Gemini 2.0 Flash (빠른 속도)</option>
+                  <option value="gemini-2.5-flash">Gemini 2.5 Flash (향상된 성능)</option>
+                </select>
+                <p className="text-xs text-muted-foreground mt-1">
+                  현재 선택: <strong>{geminiModel}</strong>
+                </p>
+              </div>
+
+              <Button
+                onClick={handleSaveGeminiModel}
+                disabled={isSavingModel}
+                className="w-full"
+              >
+                {isSavingModel ? '저장 중...' : '💾 모델 저장'}
+              </Button>
+
+              <div className="p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                <p className="text-sm text-blue-800 mb-2">
+                  <strong>💡 모델 선택 가이드:</strong>
+                </p>
+                <ul className="text-xs text-blue-700 space-y-1 ml-4">
+                  <li>• <strong>Gemini 2.0 Flash</strong>: 빠른 응답 속도, 기본 누가기록 작성에 적합</li>
+                  <li>• <strong>Gemini 2.5 Flash</strong>: 향상된 이해력과 정확도, 더 상세한 누가기록 작성</li>
+                </ul>
+              </div>
             </CardContent>
           </Card>
 

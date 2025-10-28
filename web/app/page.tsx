@@ -163,7 +163,7 @@ export default function Home() {
             </Card>
 
             {/* Main Features */}
-            <div className="grid md:grid-cols-3 gap-6">
+            <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
               <Link href="/behavior-characteristics">
                 <Card className="border-2 hover:border-primary transition-colors cursor-pointer h-full">
                   <CardHeader>
@@ -218,6 +218,36 @@ export default function Home() {
                       <li className="flex items-start gap-2">
                         <span className="mt-0.5">•</span>
                         <span>일괄 생성 지원</span>
+                      </li>
+                    </ul>
+                  </CardContent>
+                </Card>
+              </Link>
+
+              <Link href="/creative-activities">
+                <Card className="border-2 hover:border-primary transition-colors cursor-pointer h-full">
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                      <span className="text-2xl">🎨</span>
+                      창체 누가기록
+                    </CardTitle>
+                    <CardDescription className="text-sm leading-relaxed">
+                      창체세부진도표 PDF로 AI 누가기록 자동 생성
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <ul className="space-y-2 text-sm text-muted-foreground">
+                      <li className="flex items-start gap-2">
+                        <span className="mt-0.5">•</span>
+                        <span>PDF 자동 파싱 및 활동 분류</span>
+                      </li>
+                      <li className="flex items-start gap-2">
+                        <span className="mt-0.5">•</span>
+                        <span>활동별 맞춤 누가기록 생성</span>
+                      </li>
+                      <li className="flex items-start gap-2">
+                        <span className="mt-0.5">•</span>
+                        <span>원클릭 복사로 NEIS 입력</span>
                       </li>
                     </ul>
                   </CardContent>
