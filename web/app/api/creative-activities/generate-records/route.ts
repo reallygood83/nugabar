@@ -4,9 +4,7 @@ import fs from 'fs/promises';
 import path from 'path';
 import { getApp } from 'firebase/app';
 import { getFirestore, doc, getDoc } from 'firebase/firestore';
-
-// Gemini API 초기화
-const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || '');
+import { getGeminiApiKey } from '@/lib/user-settings';
 
 // AI 작성 지침 로드
 async function loadGuidelines(): Promise<string> {
@@ -63,10 +61,12 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    if (!process.env.GEMINI_API_KEY) {
+    // 사용자의 Gemini API 키 가져오기
+    const apiKey = await getGeminiApiKey(userId);
+    if (!apiKey) {
       return NextResponse.json(
-        { success: false, error: 'Gemini API 키가 설정되지 않았습니다.' },
-        { status: 500 }
+        { success: false, error: 'Gemini API 키가 설정되지 않았습니다. 설정 페이지에서 API 키를 입력해주세요.' },
+        { status: 400 }
       );
     }
 
@@ -136,7 +136,8 @@ ${guidelines}
 지금 바로 ${recordCount}개의 누가기록을 생성해주세요.
 `;
 
-    // Gemini API 호출 (사용자가 선택한 모델 사용)
+    // Gemini API 호출 (사용자가 선택한 모델과 API 키 사용)
+    const genAI = new GoogleGenerativeAI(apiKey);
     const model = genAI.getGenerativeModel({ model: selectedModel });
     const result = await model.generateContent(prompt);
     const response = await result.response;
