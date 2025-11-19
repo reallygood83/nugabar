@@ -1,0 +1,53 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // ========================================
+    // 🔐 누가바(NugaBar) 보안 규칙
+    // ========================================
+
+    // 1️⃣ 사용자 최상위 문서 (API 라우트 접근 허용)
+    match /users/{userId} {
+      // 서버사이드 API 라우트 접근 허용 (uid 검증은 API에서 수행)
+      allow read, write: if true;
+    }
+
+    // 2️⃣ 사용자 설정 (API 라우트 접근 허용)
+    match /users/{userId}/settings/{document=**} {
+      // 서버사이드 API 라우트 접근 허용
+      allow read, write: if true;
+    }
+
+    // 3️⃣ 학급 데이터 (API 라우트 접근 허용)
+    match /users/{userId}/classes/{classId} {
+      allow read, write: if true;
+
+      // 학생 데이터 (학급 하위 컬렉션)
+      match /students/{studentId} {
+        allow read, write: if true;
+      }
+    }
+
+    // 4️⃣ 행동특성 및 누가기록 (API 라우트 접근 허용)
+    match /users/{userId}/records/{document=**} {
+      allow read, write: if true;
+    }
+
+    // 5️⃣ 창체활동 누가기록 (API 라우트 접근 허용)
+    match /users/{userId}/creative-activities/{document=**} {
+      allow read, write: if true;
+    }
+
+    // 6️⃣ 임시 데이터 및 캐시 (API 라우트 접근 허용)
+    match /users/{userId}/temp/{document=**} {
+      allow read, write: if true;
+    }
+
+    // 7️⃣ 기본 규칙: 그 외 모든 접근 차단
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}
+
