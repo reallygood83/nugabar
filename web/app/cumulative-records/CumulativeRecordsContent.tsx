@@ -98,6 +98,43 @@ export default function CumulativeRecordsContent() {
     alert('복사되었습니다!');
   };
 
+  // 📥 CSV 다운로드 기능 추가
+  const downloadCSV = () => {
+    // CSV 헤더
+    const headers = ['날짜', '누가기록', '글자수'];
+
+    // CSV 데이터 행 생성
+    const rows = generatedRecords.map(record => [
+      record.date,
+      `"${record.text.replace(/"/g, '""')}"`, // 쌍따옴표 이스케이프
+      record.length.toString()
+    ]);
+
+    // CSV 문자열 생성 (BOM 추가로 한글 깨짐 방지)
+    const csvContent = '\uFEFF' + [
+      headers.join(','),
+      ...rows.map(row => row.join(','))
+    ].join('\n');
+
+    // Blob 생성 및 다운로드
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    const url = URL.createObjectURL(blob);
+
+    // 파일명: 누가기록_학생명_날짜.csv
+    const today = new Date().toISOString().split('T')[0];
+    const fileName = `누가기록_${studentName || '학생'}_${today}.csv`;
+
+    link.setAttribute('href', url);
+    link.setAttribute('download', fileName);
+    link.style.visibility = 'hidden';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+
+    alert('📥 CSV 파일이 다운로드되었습니다!');
+  };
+
   const handleSaveRecords = async () => {
     if (!classId || !studentId || generatedRecords.length === 0) {
       alert('❌ 저장할 누가기록이 없거나 학생 정보가 없습니다.');
@@ -253,6 +290,9 @@ export default function CumulativeRecordsContent() {
                   <div className="flex gap-2">
                     <Button onClick={copyAllRecords} variant="outline" size="sm">
                       📋 전체 복사
+                    </Button>
+                    <Button onClick={downloadCSV} variant="outline" size="sm">
+                      📥 CSV 다운로드
                     </Button>
                     {classId && studentId && (
                       <Button
