@@ -37,6 +37,52 @@ export default function GeneratedRecordsList({ records }: GeneratedRecordsListPr
     }
   };
 
+  // 📥 CSV 다운로드 기능
+  const downloadCSV = () => {
+    // CSV 헤더
+    const headers = ['활동명', '활동일자', '카테고리', '누가기록', '글자수'];
+
+    // 모든 활동의 누가기록을 하나의 배열로 통합
+    const rows: string[][] = [];
+    records.forEach(record => {
+      const categoryName = categoryInfo[record.activityCategory as keyof typeof categoryInfo]?.name || record.activityCategory;
+
+      record.records.forEach(text => {
+        rows.push([
+          record.activitySubject,
+          record.activityDate,
+          categoryName,
+          `"${text.replace(/"/g, '""')}"`, // 쌍따옴표 이스케이프
+          text.length.toString()
+        ]);
+      });
+    });
+
+    // CSV 문자열 생성 (BOM 추가로 한글 깨짐 방지)
+    const csvContent = '\uFEFF' + [
+      headers.join(','),
+      ...rows.map(row => row.join(','))
+    ].join('\n');
+
+    // Blob 생성 및 다운로드
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    const url = URL.createObjectURL(blob);
+
+    // 파일명: 창체누가기록_날짜.csv
+    const today = new Date().toISOString().split('T')[0];
+    const fileName = `창체누가기록_${today}.csv`;
+
+    link.setAttribute('href', url);
+    link.setAttribute('download', fileName);
+    link.style.visibility = 'hidden';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+
+    alert('📥 CSV 파일이 다운로드되었습니다!');
+  };
+
   if (records.length === 0) {
     return null;
   }
@@ -57,11 +103,22 @@ export default function GeneratedRecordsList({ records }: GeneratedRecordsListPr
               {records.length}개 활동에 대한 총 {totalRecords}개의 누가기록이 생성되었습니다
             </p>
           </div>
-          <div className="flex items-center gap-2 px-4 py-2 bg-green-50 border border-green-200 rounded-lg">
-            <svg className="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-            </svg>
-            <span className="text-sm font-semibold text-green-800">생성 완료</span>
+          <div className="flex items-center gap-3">
+            <button
+              onClick={downloadCSV}
+              className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium text-sm"
+            >
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+              </svg>
+              📥 CSV 다운로드
+            </button>
+            <div className="flex items-center gap-2 px-4 py-2 bg-green-50 border border-green-200 rounded-lg">
+              <svg className="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+              <span className="text-sm font-semibold text-green-800">생성 완료</span>
+            </div>
           </div>
         </div>
       </div>
