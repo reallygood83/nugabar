@@ -23,12 +23,14 @@ interface GeneratedRecord {
 interface RecordGeneratorProps {
   selectedActivities: Activity[];
   onGenerationComplete: (records: GeneratedRecord[]) => void;
+  onGeneratingChange?: (isGenerating: boolean) => void;
   userId: string;
 }
 
 export default function RecordGenerator({
   selectedActivities,
   onGenerationComplete,
+  onGeneratingChange,
   userId
 }: RecordGeneratorProps) {
   const [recordCount, setRecordCount] = useState(5);
@@ -48,6 +50,7 @@ export default function RecordGenerator({
     }
 
     setIsGenerating(true);
+    onGeneratingChange?.(true);
     setError('');
     setProgress({ current: 0, total: selectedActivities.length });
 
@@ -96,6 +99,7 @@ export default function RecordGenerator({
       setError(err instanceof Error ? err.message : '누가기록 생성 중 오류가 발생했습니다.');
     } finally {
       setIsGenerating(false);
+      onGeneratingChange?.(false);
       setProgress({ current: 0, total: 0 });
     }
   };

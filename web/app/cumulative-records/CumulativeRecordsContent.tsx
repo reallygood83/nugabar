@@ -5,6 +5,7 @@ import { useAuth } from '@/lib/auth-context';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { YouTubeSubscribeModal } from '@/components/common/YouTubeSubscribeModal';
 
 export default function CumulativeRecordsContent() {
   const { user } = useAuth();
@@ -362,6 +363,13 @@ export default function CumulativeRecordsContent() {
           )}
         </div>
       </div>
+
+      {/* YouTube Subscribe Modal */}
+      <YouTubeSubscribeModal
+        isOpen={isGenerating}
+        onClose={() => {}}
+        storageKey="cumulative-records-modal-shown"
+      />
     </div>
   );
 }
