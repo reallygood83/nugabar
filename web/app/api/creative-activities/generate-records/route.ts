@@ -3,7 +3,7 @@ import { GoogleGenerativeAI } from '@google/generative-ai';
 import fs from 'fs/promises';
 import path from 'path';
 import { requireAuth } from '@/lib/auth-server';
-import { getGeminiApiKey } from '@/lib/user-settings';
+import { getRequestGeminiApiKey, missingGeminiApiKeyResponse } from '@/lib/gemini-api-key-server';
 
 const GEMINI_MODEL = 'gemini-2.5-flash';
 
@@ -57,7 +57,6 @@ export async function POST(request: NextRequest) {
     if ('error' in auth) return auth.error;
 
     const { activity, recordCount } = await request.json();
-    const uid = auth.uid;
 
     if (!activity) {
       return NextResponse.json(
@@ -66,13 +65,9 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // 사용자의 Gemini API 키 가져오기
-    const apiKey = await getGeminiApiKey(uid);
+    const apiKey = getRequestGeminiApiKey(request);
     if (!apiKey) {
-      return NextResponse.json(
-        { success: false, error: 'Gemini API 키가 설정되지 않았습니다. 설정 페이지에서 API 키를 입력해주세요.' },
-        { status: 400 }
-      );
+      return missingGeminiApiKeyResponse();
     }
 
     // AI 작성 지침 로드

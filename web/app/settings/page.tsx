@@ -3,6 +3,11 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/lib/auth-context';
 import { authenticatedFetch } from '@/lib/authenticated-fetch';
+import {
+  deleteLocalGeminiApiKey,
+  getLocalGeminiApiKey,
+  saveLocalGeminiApiKey,
+} from '@/lib/local-gemini-api-key';
 import NavigationHeader from '@/components/common/NavigationHeader';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -33,6 +38,10 @@ export default function SettingsPage() {
     loadSchoolName();
     loadGeminiModel();
   }, [user]);
+
+  useEffect(() => {
+    checkApiKey();
+  }, []);
 
   const loadSchoolClosures = async () => {
     if (!user?.uid) return;
@@ -89,19 +98,7 @@ export default function SettingsPage() {
   };
 
   const checkApiKey = async () => {
-    if (!user?.uid) return;
-
-    try {
-      const response = await authenticatedFetch(user, isDevMode, '/api/settings/check-api-key', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-      });
-
-      const data = await response.json();
-      setHasApiKey(data.hasApiKey);
-    } catch (error) {
-      console.error('API 키 확인 오류:', error);
-    }
+    setHasApiKey(!!getLocalGeminiApiKey());
   };
 
   const handleSave = async () => {
@@ -112,22 +109,10 @@ export default function SettingsPage() {
 
     setIsSaving(true);
     try {
-      const response = await authenticatedFetch(user, isDevMode, '/api/settings/save-api-key', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          apiKey: apiKey.trim(),
-        }),
-      });
-
-      const data = await response.json();
-      if (data.success) {
-        alert('✅ API 키가 안전하게 저장되었습니다!');
-        setHasApiKey(true);
-        setApiKey(''); // 보안을 위해 입력 필드 초기화
-      } else {
-        alert('❌ 저장 실패: ' + data.error);
-      }
+      saveLocalGeminiApiKey(apiKey.trim());
+      alert('✅ API 키가 이 브라우저에만 저장되었습니다!');
+      setHasApiKey(true);
+      setApiKey('');
     } catch (error) {
       alert('❌ 저장 중 오류가 발생했습니다.');
     } finally {
@@ -171,19 +156,10 @@ export default function SettingsPage() {
     }
 
     try {
-      const response = await authenticatedFetch(user, isDevMode, '/api/settings/delete-api-key', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-      });
-
-      const data = await response.json();
-      if (data.success) {
-        alert('✅ API 키가 삭제되었습니다.');
-        setHasApiKey(false);
-        setApiKey('');
-      } else {
-        alert('❌ 삭제 실패: ' + data.error);
-      }
+      deleteLocalGeminiApiKey();
+      alert('✅ 이 브라우저에 저장된 API 키가 삭제되었습니다.');
+      setHasApiKey(false);
+      setApiKey('');
     } catch (error) {
       alert('❌ 삭제 중 오류가 발생했습니다.');
     }
@@ -279,14 +255,14 @@ export default function SettingsPage() {
             <CardHeader>
               <CardTitle>🔑 Gemini API 키 설정</CardTitle>
               <CardDescription>
-                AI 기능을 사용하기 위한 Gemini API 키를 안전하게 저장합니다
+                Gemini API 키는 서버에 저장하지 않고 이 브라우저에만 보관합니다
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
               {hasApiKey && (
                 <div className="p-3 bg-green-50 border border-green-200 rounded-lg">
                   <p className="text-sm text-green-800">
-                    ✅ API 키가 이미 저장되어 있습니다. 새로운 키를 입력하면 기존 키를 덮어씁니다.
+                    ✅ API 키가 이 브라우저에 저장되어 있습니다. 새로운 키를 입력하면 기존 키를 덮어씁니다.
                   </p>
                 </div>
               )}
@@ -301,7 +277,7 @@ export default function SettingsPage() {
                   className="w-full p-3 border rounded-lg font-mono text-sm"
                 />
                 <p className="text-xs text-muted-foreground mt-1">
-                  API 키는 안전하게 암호화되어 저장됩니다
+                  API 키는 서버에 저장되지 않으며 AI 생성 요청 때만 임시로 전달됩니다
                 </p>
               </div>
 

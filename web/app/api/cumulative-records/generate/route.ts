@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { requireAuth } from '@/lib/auth-server';
-import { getGeminiApiKey } from '@/lib/user-settings';
+import { getRequestGeminiApiKey, missingGeminiApiKeyResponse } from '@/lib/gemini-api-key-server';
 import { validateCumulativeRecord } from '@/lib/neis-compliance';
 import { generateCumulativeRecordDates, formatKoreanDate } from '@/lib/korean-holidays';
 import { db } from '@/lib/firebase-admin';
@@ -51,13 +51,9 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ success: false, error: '행동특성 텍스트를 입력해주세요.' }, { status: 400 });
     }
 
-    // 사용자의 Gemini API 키 가져오기
-    const apiKey = await getGeminiApiKey(uid);
+    const apiKey = getRequestGeminiApiKey(request);
     if (!apiKey) {
-      return NextResponse.json({
-        success: false,
-        error: 'Gemini API 키가 설정되지 않았습니다. 설정 페이지에서 API 키를 입력해주세요.'
-      }, { status: 400 });
+      return missingGeminiApiKeyResponse();
     }
 
     // Apps Script createCumulativeRecordsPrompt 로직 100% 이식

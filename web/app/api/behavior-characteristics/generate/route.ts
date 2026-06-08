@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { requireAuth } from '@/lib/auth-server';
-import { getGeminiApiKey } from '@/lib/user-settings';
+import { getRequestGeminiApiKey, missingGeminiApiKeyResponse } from '@/lib/gemini-api-key-server';
 import { validateBehaviorCharacteristic } from '@/lib/neis-compliance';
 
 // Apps Script INTENSITY_MODIFIERS 이식
@@ -80,19 +80,14 @@ export async function POST(request: NextRequest) {
     if ('error' in auth) return auth.error;
 
     const { keywords } = await request.json();
-    const uid = auth.uid;
 
     if (!keywords || Object.keys(keywords).length === 0) {
       return NextResponse.json({ success: false, error: '키워드를 선택해주세요.' }, { status: 400 });
     }
 
-    // 사용자의 Gemini API 키 가져오기
-    const apiKey = await getGeminiApiKey(uid);
+    const apiKey = getRequestGeminiApiKey(request);
     if (!apiKey) {
-      return NextResponse.json({
-        success: false,
-        error: 'Gemini API 키가 설정되지 않았습니다. 설정 페이지에서 API 키를 입력해주세요.'
-      }, { status: 400 });
+      return missingGeminiApiKeyResponse();
     }
 
     // Apps Script 강도 조절 시스템 적용
