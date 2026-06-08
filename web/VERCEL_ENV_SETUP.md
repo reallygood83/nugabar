@@ -5,7 +5,7 @@ Vercel 프로젝트 배포 시 반드시 입력해야 할 환경변수 목록입
 
 ---
 
-## 🔑 필수 환경변수 (8개)
+## 🔑 필수 환경변수 (11개)
 
 Vercel 프로젝트 설정 → Environment Variables 메뉴에서 아래 변수들을 **모두** 입력해야 합니다.
 
@@ -37,6 +37,26 @@ NEXT_PUBLIC_DEV_MODE=false
 **⚠️ 중요**: Vercel 배포 시 반드시 `false`로 설정해야 합니다!
 - `true`: 개발 모드 (Google 로그인 없이 더미 사용자 사용)
 - `false`: 프로덕션 모드 (실제 Google 인증 필수)
+
+### Firebase Admin 서버 변수 (3개)
+
+Next.js API Route에서 Firebase ID 토큰을 검증하고 Firestore에 안전하게 접근하기 위해 필요합니다.
+
+```
+FIREBASE_ADMIN_PROJECT_ID
+FIREBASE_ADMIN_CLIENT_EMAIL
+FIREBASE_ADMIN_PRIVATE_KEY
+```
+
+**값 확인 방법**:
+1. Firebase Console → 프로젝트 설정(⚙️) → 서비스 계정
+2. "새 비공개 키 생성" 클릭
+3. 다운로드된 JSON에서 다음 값을 복사
+   - `project_id` → `FIREBASE_ADMIN_PROJECT_ID`
+   - `client_email` → `FIREBASE_ADMIN_CLIENT_EMAIL`
+   - `private_key` → `FIREBASE_ADMIN_PRIVATE_KEY`
+
+`FIREBASE_ADMIN_PRIVATE_KEY`는 줄바꿈을 포함한 원문 또는 `\n` 문자열 형태 모두 지원합니다.
 
 ---
 
@@ -99,8 +119,9 @@ AIzaSy... (실제 Firebase API 키)
 
 ## ✅ 배포 후 검증 체크리스트
 
-- [ ] Vercel 환경변수 8개 모두 입력 완료
+- [ ] Vercel 환경변수 11개 모두 입력 완료
 - [ ] `NEXT_PUBLIC_DEV_MODE=false` 확인
+- [ ] Firebase Admin 서비스 계정 변수 3개 입력 완료
 - [ ] Firebase 승인된 도메인에 Vercel URL 추가
 - [ ] Google OAuth 클라이언트 ID에 Vercel URL 추가
 - [ ] Vercel 배포 성공 확인

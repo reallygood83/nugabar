@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { requireAuth } from '@/lib/auth-server';
 import { getGeminiApiKey } from '@/lib/user-settings';
 import { validateBehaviorCharacteristic } from '@/lib/neis-compliance';
 
@@ -75,11 +76,11 @@ const keywordData: Record<string, string> = {
 
 export async function POST(request: NextRequest) {
   try {
-    const { keywords, uid } = await request.json();
+    const auth = await requireAuth(request);
+    if ('error' in auth) return auth.error;
 
-    if (!uid) {
-      return NextResponse.json({ success: false, error: '사용자 인증이 필요합니다.' }, { status: 401 });
-    }
+    const { keywords } = await request.json();
+    const uid = auth.uid;
 
     if (!keywords || Object.keys(keywords).length === 0) {
       return NextResponse.json({ success: false, error: '키워드를 선택해주세요.' }, { status: 400 });
@@ -186,9 +187,9 @@ export async function POST(request: NextRequest) {
 
 행동특성 및 종합의견:`;
 
-    // Gemini API 호출 (gemini-2.0-flash 모델 사용)
+    // Gemini API 호출 (gemini-2.5-flash 모델 사용)
     const response = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`,
+      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`,
       {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },

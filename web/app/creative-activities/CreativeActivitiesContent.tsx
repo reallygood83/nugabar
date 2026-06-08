@@ -143,7 +143,6 @@ export default function CreativeActivitiesContent() {
             <PDFUploader
               onUploadSuccess={handleUploadSuccess}
               onUploadError={handleUploadError}
-              userId={user.uid}
             />
           </div>
 
@@ -202,7 +201,6 @@ export default function CreativeActivitiesContent() {
                 selectedActivities={selectedActivities}
                 onGenerationComplete={handleGenerationComplete}
                 onGeneratingChange={setIsGenerating}
-                userId={user.uid}
               />
             )}
           </div>

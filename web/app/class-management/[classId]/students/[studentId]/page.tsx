@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/lib/auth-context';
+import { authenticatedFetch } from '@/lib/authenticated-fetch';
 import { useRouter, useParams } from 'next/navigation';
 import NavigationHeader from '@/components/common/NavigationHeader';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
@@ -26,7 +27,7 @@ interface ClassData {
 }
 
 export default function StudentRecordPage() {
-  const { user } = useAuth();
+  const { user, isDevMode } = useAuth();
   const router = useRouter();
   const params = useParams();
   const classId = params.classId as string;
@@ -58,10 +59,9 @@ export default function StudentRecordPage() {
 
     try {
       // 학급 정보 가져오기
-      const classResponse = await fetch('/api/classes/list', {
+      const classResponse = await authenticatedFetch(user, isDevMode, '/api/classes/list', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ uid: user.uid }),
       });
       const classData = await classResponse.json();
       if (classData.success) {
@@ -72,10 +72,9 @@ export default function StudentRecordPage() {
       }
 
       // 학생 목록에서 현재 학생 찾기
-      const studentsResponse = await fetch(`/api/classes/${classId}/students/list`, {
+      const studentsResponse = await authenticatedFetch(user, isDevMode, `/api/classes/${classId}/students/list`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ uid: user.uid }),
       });
       const studentsData = await studentsResponse.json();
       if (studentsData.success) {
@@ -98,10 +97,9 @@ export default function StudentRecordPage() {
 
     setIsLoading(true);
     try {
-      const response = await fetch(`/api/classes/${classId}/students/${studentId}/records/list`, {
+      const response = await authenticatedFetch(user, isDevMode, `/api/classes/${classId}/students/${studentId}/records/list`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ uid: user.uid }),
       });
 
       const data = await response.json();
@@ -119,11 +117,10 @@ export default function StudentRecordPage() {
     if (!user) return;
 
     try {
-      const response = await fetch(`/api/classes/${classId}/students/${studentId}/records/save`, {
+      const response = await authenticatedFetch(user, isDevMode, `/api/classes/${classId}/students/${studentId}/records/save`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          uid: user.uid,
           content,
           observationDates,
           behaviorText,

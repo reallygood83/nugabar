@@ -11,9 +11,9 @@ export async function POST(request: NextRequest) {
       }, { status: 400 });
     }
 
-    // Gemini API 테스트 호출 (gemini-2.0-flash 모델)
+    // Gemini API 테스트 호출 (gemini-2.5-flash 모델)
     const testResponse = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey.trim()}`,
+      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey.trim()}`,
       {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },

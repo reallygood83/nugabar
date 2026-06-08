@@ -1,22 +1,19 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { requireAuth } from '@/lib/auth-server';
 import { db } from '@/lib/firebase-admin';
 
 export async function POST(request: NextRequest) {
   try {
-    const { uid, closureDates } = await request.json();
+    const auth = await requireAuth(request);
+    if ('error' in auth) return auth.error;
 
-    if (!uid) {
-      return NextResponse.json(
-        { success: false, error: 'UID가 필요합니다' },
-        { status: 400 }
-      );
-    }
+    const { closureDates } = await request.json();
 
     // Firestore에 휴업일 저장
-    await db.collection('users').doc(uid).update({
+    await db.collection('users').doc(auth.uid).set({
       schoolClosureDates: closureDates || '',
       updatedAt: new Date().toISOString(),
-    });
+    }, { merge: true });
 
     return NextResponse.json({
       success: true,

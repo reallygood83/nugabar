@@ -1,14 +1,16 @@
 'use client';
 
 import { useState, useRef } from 'react';
+import { useAuth } from '@/lib/auth-context';
+import { authenticatedFetch } from '@/lib/authenticated-fetch';
 
 interface PDFUploaderProps {
   onUploadSuccess: (activities: any[]) => void;
   onUploadError: (error: string) => void;
-  userId: string;
 }
 
-export default function PDFUploader({ onUploadSuccess, onUploadError, userId }: PDFUploaderProps) {
+export default function PDFUploader({ onUploadSuccess, onUploadError }: PDFUploaderProps) {
+  const { user, isDevMode } = useAuth();
   const [isUploading, setIsUploading] = useState(false);
   const [fileName, setFileName] = useState('');
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -35,9 +37,8 @@ export default function PDFUploader({ onUploadSuccess, onUploadError, userId }: 
     try {
       const formData = new FormData();
       formData.append('pdf', file);
-      formData.append('userId', userId);
 
-      const response = await fetch('/api/creative-activities/parse-pdf', {
+      const response = await authenticatedFetch(user, isDevMode, '/api/creative-activities/parse-pdf', {
         method: 'POST',
         body: formData,
       });

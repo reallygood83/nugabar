@@ -1,6 +1,5 @@
-import { doc, getDoc, setDoc, updateDoc } from 'firebase/firestore';
-import { db } from './firebase';
 import { encryptApiKey, decryptApiKey } from './encryption';
+import { getAdminDb } from './firebase-admin';
 
 export interface UserSettings {
   geminiApiKey?: string; // 암호화된 상태로 저장
@@ -14,10 +13,14 @@ export interface UserSettings {
  */
 export async function getUserSettings(uid: string): Promise<UserSettings | null> {
   try {
-    const docRef = doc(db, 'users', uid, 'settings', 'general');
-    const docSnap = await getDoc(docRef);
+    const docSnap = await getAdminDb()
+      .collection('users')
+      .doc(uid)
+      .collection('settings')
+      .doc('general')
+      .get();
 
-    if (docSnap.exists()) {
+    if (docSnap.exists) {
       return docSnap.data() as UserSettings;
     }
     return null;
@@ -35,20 +38,24 @@ export async function saveGeminiApiKey(uid: string, apiKey: string): Promise<voi
     // API 키 암호화
     const encryptedKey = await encryptApiKey(apiKey, uid);
 
-    const docRef = doc(db, 'users', uid, 'settings', 'general');
-    const existingSettings = await getDoc(docRef);
+    const docRef = getAdminDb()
+      .collection('users')
+      .doc(uid)
+      .collection('settings')
+      .doc('general');
+    const existingSettings = await docRef.get();
 
-    if (existingSettings.exists()) {
+    if (existingSettings.exists) {
       // 기존 설정 업데이트
-      await updateDoc(docRef, {
+      await docRef.update({
         geminiApiKey: encryptedKey,
         updatedAt: new Date(),
       });
     } else {
       // 새 설정 생성
-      await setDoc(docRef, {
+      await docRef.set({
         geminiApiKey: encryptedKey,
-        geminiModel: 'gemini-1.5-flash',
+        geminiModel: 'gemini-2.5-flash',
         createdAt: new Date(),
         updatedAt: new Date(),
       });
@@ -83,11 +90,18 @@ export async function getGeminiApiKey(uid: string): Promise<string | null> {
  */
 export async function updateGeminiModel(uid: string, model: string): Promise<void> {
   try {
-    const docRef = doc(db, 'users', uid, 'settings', 'general');
-    await updateDoc(docRef, {
-      geminiModel: model,
-      updatedAt: new Date(),
-    });
+    await getAdminDb()
+      .collection('users')
+      .doc(uid)
+      .collection('settings')
+      .doc('general')
+      .set(
+        {
+          geminiModel: model,
+          updatedAt: new Date(),
+        },
+        { merge: true }
+      );
   } catch (error) {
     console.error('모델 설정 업데이트 실패:', error);
     throw new Error('모델 설정 업데이트에 실패했습니다.');
@@ -99,11 +113,18 @@ export async function updateGeminiModel(uid: string, model: string): Promise<voi
  */
 export async function deleteGeminiApiKey(uid: string): Promise<void> {
   try {
-    const docRef = doc(db, 'users', uid, 'settings', 'general');
-    await updateDoc(docRef, {
-      geminiApiKey: null,
-      updatedAt: new Date(),
-    });
+    await getAdminDb()
+      .collection('users')
+      .doc(uid)
+      .collection('settings')
+      .doc('general')
+      .set(
+        {
+          geminiApiKey: null,
+          updatedAt: new Date(),
+        },
+        { merge: true }
+      );
   } catch (error) {
     console.error('API 키 삭제 실패:', error);
     throw new Error('API 키 삭제에 실패했습니다.');

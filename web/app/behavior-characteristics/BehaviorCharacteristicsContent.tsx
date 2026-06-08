@@ -2,13 +2,14 @@
 
 import { useState } from 'react';
 import { useAuth } from '@/lib/auth-context';
+import { authenticatedFetch } from '@/lib/authenticated-fetch';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { YouTubeSubscribeModal } from '@/components/common/YouTubeSubscribeModal';
 
 export default function BehaviorCharacteristicsContent() {
-  const { user } = useAuth();
+  const { user, isDevMode } = useAuth();
   const router = useRouter();
   const searchParams = useSearchParams();
 
@@ -165,12 +166,11 @@ export default function BehaviorCharacteristicsContent() {
 
     setIsGenerating(true);
     try {
-      const response = await fetch('/api/behavior-characteristics/generate', {
+      const response = await authenticatedFetch(user, isDevMode, '/api/behavior-characteristics/generate', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           keywords: selectedKeywords,
-          uid: user?.uid,
         }),
       });
 

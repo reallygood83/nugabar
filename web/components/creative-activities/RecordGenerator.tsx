@@ -1,6 +1,8 @@
 'use client';
 
 import { useState } from 'react';
+import { useAuth } from '@/lib/auth-context';
+import { authenticatedFetch } from '@/lib/authenticated-fetch';
 
 interface Activity {
   id: string;
@@ -24,15 +26,14 @@ interface RecordGeneratorProps {
   selectedActivities: Activity[];
   onGenerationComplete: (records: GeneratedRecord[]) => void;
   onGeneratingChange?: (isGenerating: boolean) => void;
-  userId: string;
 }
 
 export default function RecordGenerator({
   selectedActivities,
   onGenerationComplete,
-  onGeneratingChange,
-  userId
+  onGeneratingChange
 }: RecordGeneratorProps) {
+  const { user, isDevMode } = useAuth();
   const [recordCount, setRecordCount] = useState(5);
   const [isGenerating, setIsGenerating] = useState(false);
   const [error, setError] = useState('');
@@ -62,11 +63,10 @@ export default function RecordGenerator({
         const activity = selectedActivities[i];
         setProgress({ current: i + 1, total: selectedActivities.length });
 
-        const response = await fetch('/api/creative-activities/generate-records', {
+        const response = await authenticatedFetch(user, isDevMode, '/api/creative-activities/generate-records', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
-            userId,
             activity: {
               date: activity.date,
               category: activity.category,

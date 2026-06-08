@@ -3,13 +3,14 @@
 import { useState, useEffect } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 import { useAuth } from '@/lib/auth-context';
+import { authenticatedFetch } from '@/lib/authenticated-fetch';
 
 export default function NavigationHeader() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [schoolName, setSchoolName] = useState('');
   const router = useRouter();
   const pathname = usePathname();
-  const { user, logout } = useAuth();
+  const { user, logout, isDevMode } = useAuth();
 
   // 학교명 불러오기
   useEffect(() => {
@@ -17,10 +18,9 @@ export default function NavigationHeader() {
       if (!user?.uid) return;
 
       try {
-        const response = await fetch('/api/settings/get-school-name', {
+        const response = await authenticatedFetch(user, isDevMode, '/api/settings/get-school-name', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ uid: user.uid }),
         });
 
         const data = await response.json();

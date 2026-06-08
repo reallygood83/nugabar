@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { requireAuth } from '@/lib/auth-server';
 import { getGeminiApiKey } from '@/lib/user-settings';
 import { validateCumulativeRecord } from '@/lib/neis-compliance';
 import { generateCumulativeRecordDates, formatKoreanDate } from '@/lib/korean-holidays';
@@ -7,12 +8,15 @@ import { db } from '@/lib/firebase-admin';
 // Apps Script 누가기록 생성 로직 이식
 export async function POST(request: NextRequest) {
   try {
+    const auth = await requireAuth(request);
+    if ('error' in auth) return auth.error;
+
     const {
       behaviorText,
       recordCount = 5,
-      uid,
       excludedDates = [] // 휴업일 및 결석일 (선택사항)
     } = await request.json();
+    const uid = auth.uid;
 
     // 설정에서 저장된 학교 휴업일 불러오기
     let allExcludedDates = [...excludedDates];
@@ -41,10 +45,6 @@ export async function POST(request: NextRequest) {
     } catch (error) {
       console.error('학교 휴업일 불러오기 오류:', error);
       // 오류가 발생해도 계속 진행 (사용자가 입력한 날짜만 사용)
-    }
-
-    if (!uid) {
-      return NextResponse.json({ success: false, error: '사용자 인증이 필요합니다.' }, { status: 401 });
     }
 
     if (!behaviorText || !behaviorText.trim()) {
@@ -116,9 +116,9 @@ ${behaviorText}
 **응답 형식**: [{"record": "누가기록 내용."}, {"record": "누가기록 내용."}, ...]
 `;
 
-    // Gemini API 호출 (gemini-2.0-flash 모델)
+    // Gemini API 호출 (gemini-2.5-flash 모델)
     const response = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`,
+      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`,
       {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },

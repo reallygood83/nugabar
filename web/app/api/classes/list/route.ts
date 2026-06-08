@@ -1,16 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/firebase-admin';
+import { requireAuth } from '@/lib/auth-server';
 
 export async function POST(request: NextRequest) {
   try {
-    const { uid } = await request.json();
+    const auth = await requireAuth(request);
+    if ('error' in auth) return auth.error;
 
-    if (!uid) {
-      return NextResponse.json(
-        { success: false, error: 'UID가 필요합니다' },
-        { status: 400 }
-      );
-    }
+    const uid = auth.uid;
 
     // Firestore에서 학급 목록 조회
     const classesSnapshot = await db

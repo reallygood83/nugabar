@@ -669,7 +669,7 @@ const NEIS_REGULATIONS = {
  * GEMINI API 설정 및 Configuration
  */
 const GEMINI_CONFIG = {
-  model: 'gemini-2.0-flash-exp',
+  model: 'gemini-2.5-flash',
   apiUrl: 'https://generativelanguage.googleapis.com/v1beta/models/',
   generationConfig: {
     temperature: 0.7,
@@ -768,7 +768,7 @@ function testGeminiApiKey(testApiKey) {
     
     // 2. 테스트 요청 구성
     const testPrompt = 'Hi';
-    const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-exp:generateContent?key=${cleanApiKey}`;
+    const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${cleanApiKey}`;
     
     const requestBody = {
       contents: [{

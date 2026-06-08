@@ -1,16 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { requireAuth } from '@/lib/auth-server';
 import { deleteGeminiApiKey } from '@/lib/user-settings';
 
 export async function POST(request: NextRequest) {
   try {
-    const { uid } = await request.json();
-
-    if (!uid) {
-      return NextResponse.json({ success: false, error: '사용자 인증이 필요합니다.' }, { status: 401 });
-    }
+    const auth = await requireAuth(request);
+    if ('error' in auth) return auth.error;
 
     // API 키 삭제
-    await deleteGeminiApiKey(uid);
+    await deleteGeminiApiKey(auth.uid);
 
     return NextResponse.json({ success: true });
   } catch (error) {

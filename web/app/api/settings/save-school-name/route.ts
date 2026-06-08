@@ -1,24 +1,19 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getFirestore, doc, setDoc } from 'firebase/firestore';
-import { app } from '@/lib/firebase';
-
-const db = getFirestore(app);
+import { requireAuth } from '@/lib/auth-server';
+import { db } from '@/lib/firebase-admin';
 
 export async function POST(request: NextRequest) {
   try {
-    const { schoolName, uid } = await request.json();
+    const auth = await requireAuth(request);
+    if ('error' in auth) return auth.error;
 
-    if (!uid) {
-      return NextResponse.json({ success: false, error: '사용자 인증이 필요합니다.' }, { status: 401 });
-    }
+    const { schoolName } = await request.json();
 
     if (!schoolName || !schoolName.trim()) {
       return NextResponse.json({ success: false, error: '학교명을 입력해주세요.' }, { status: 400 });
     }
 
-    // Firestore에 학교명 저장
-    const userDocRef = doc(db, 'users', uid);
-    await setDoc(userDocRef, {
+    await db.collection('users').doc(auth.uid).set({
       schoolName: schoolName.trim(),
       updatedAt: new Date().toISOString(),
     }, { merge: true });

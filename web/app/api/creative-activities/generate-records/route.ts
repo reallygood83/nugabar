@@ -2,9 +2,10 @@ import { NextRequest, NextResponse } from 'next/server';
 import { GoogleGenerativeAI } from '@google/generative-ai';
 import fs from 'fs/promises';
 import path from 'path';
-import { getApp } from 'firebase/app';
-import { getFirestore, doc, getDoc } from 'firebase/firestore';
+import { requireAuth } from '@/lib/auth-server';
 import { getGeminiApiKey } from '@/lib/user-settings';
+
+const GEMINI_MODEL = 'gemini-2.5-flash';
 
 // AI 작성 지침 로드
 async function loadGuidelines(): Promise<string> {
@@ -52,9 +53,13 @@ const categoryObservationPoints = {
 
 export async function POST(request: NextRequest) {
   try {
-    const { userId, activity, recordCount } = await request.json();
+    const auth = await requireAuth(request);
+    if ('error' in auth) return auth.error;
 
-    if (!userId || !activity) {
+    const { activity, recordCount } = await request.json();
+    const uid = auth.uid;
+
+    if (!activity) {
       return NextResponse.json(
         { success: false, error: '필수 정보가 누락되었습니다.' },
         { status: 400 }
@@ -62,29 +67,12 @@ export async function POST(request: NextRequest) {
     }
 
     // 사용자의 Gemini API 키 가져오기
-    const apiKey = await getGeminiApiKey(userId);
+    const apiKey = await getGeminiApiKey(uid);
     if (!apiKey) {
       return NextResponse.json(
         { success: false, error: 'Gemini API 키가 설정되지 않았습니다. 설정 페이지에서 API 키를 입력해주세요.' },
         { status: 400 }
       );
-    }
-
-    // 사용자의 Gemini 모델 설정 가져오기
-    let selectedModel = 'gemini-2.0-flash'; // 기본값
-    try {
-      const app = getApp();
-      const db = getFirestore(app);
-      const docRef = doc(db, 'users', userId, 'settings', 'preferences');
-      const docSnap = await getDoc(docRef);
-
-      if (docSnap.exists()) {
-        const data = docSnap.data();
-        selectedModel = data.geminiModel || 'gemini-2.0-flash';
-      }
-    } catch (error) {
-      console.error('모델 설정 조회 오류:', error);
-      // 오류 발생 시 기본 모델 사용
     }
 
     // AI 작성 지침 로드
@@ -136,9 +124,9 @@ ${guidelines}
 지금 바로 ${recordCount}개의 누가기록을 생성해주세요.
 `;
 
-    // Gemini API 호출 (사용자가 선택한 모델과 API 키 사용)
+    // Gemini API 호출 (고정 모델 사용)
     const genAI = new GoogleGenerativeAI(apiKey);
-    const model = genAI.getGenerativeModel({ model: selectedModel });
+    const model = genAI.getGenerativeModel({ model: GEMINI_MODEL });
     const result = await model.generateContent(prompt);
     const response = await result.response;
     const text = response.text();

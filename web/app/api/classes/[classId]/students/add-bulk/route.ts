@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/firebase-admin';
+import { requireAuth } from '@/lib/auth-server';
 import { maskName } from '@/lib/name-masking';
 
 export async function POST(
@@ -7,10 +8,14 @@ export async function POST(
   { params }: { params: Promise<{ classId: string }> }
 ) {
   try {
-    const { uid, students } = await request.json();
-    const { classId } = await params;
+    const auth = await requireAuth(request);
+    if ('error' in auth) return auth.error;
 
-    if (!uid || !classId || !students || !Array.isArray(students)) {
+    const { students } = await request.json();
+    const { classId } = await params;
+    const uid = auth.uid;
+
+    if (!classId || !students || !Array.isArray(students)) {
       return NextResponse.json(
         { success: false, error: '필수 정보가 누락되었습니다' },
         { status: 400 }

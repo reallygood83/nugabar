@@ -2,12 +2,13 @@
 
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/lib/auth-context';
+import { authenticatedFetch } from '@/lib/authenticated-fetch';
 import NavigationHeader from '@/components/common/NavigationHeader';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 
 export default function SettingsPage() {
-  const { user } = useAuth();
+  const { user, isDevMode } = useAuth();
   const [apiKey, setApiKey] = useState('');
   const [isSaving, setIsSaving] = useState(false);
   const [isTesting, setIsTesting] = useState(false);
@@ -23,7 +24,7 @@ export default function SettingsPage() {
   const [isSavingSchoolName, setIsSavingSchoolName] = useState(false);
 
   // Gemini 모델 설정
-  const [geminiModel, setGeminiModel] = useState('gemini-2.0-flash');
+  const [geminiModel, setGeminiModel] = useState('gemini-2.5-flash');
   const [isSavingModel, setIsSavingModel] = useState(false);
 
   useEffect(() => {
@@ -37,10 +38,9 @@ export default function SettingsPage() {
     if (!user?.uid) return;
 
     try {
-      const response = await fetch('/api/settings/get-school-closures', {
+      const response = await authenticatedFetch(user, isDevMode, '/api/settings/get-school-closures', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ uid: user.uid }),
       });
 
       const data = await response.json();
@@ -56,10 +56,9 @@ export default function SettingsPage() {
     if (!user?.uid) return;
 
     try {
-      const response = await fetch('/api/settings/get-school-name', {
+      const response = await authenticatedFetch(user, isDevMode, '/api/settings/get-school-name', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ uid: user.uid }),
       });
 
       const data = await response.json();
@@ -75,10 +74,9 @@ export default function SettingsPage() {
     if (!user?.uid) return;
 
     try {
-      const response = await fetch('/api/settings/get-gemini-model', {
+      const response = await authenticatedFetch(user, isDevMode, '/api/settings/get-gemini-model', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ uid: user.uid }),
       });
 
       const data = await response.json();
@@ -94,10 +92,9 @@ export default function SettingsPage() {
     if (!user?.uid) return;
 
     try {
-      const response = await fetch('/api/settings/check-api-key', {
+      const response = await authenticatedFetch(user, isDevMode, '/api/settings/check-api-key', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ uid: user.uid }),
       });
 
       const data = await response.json();
@@ -115,12 +112,11 @@ export default function SettingsPage() {
 
     setIsSaving(true);
     try {
-      const response = await fetch('/api/settings/save-api-key', {
+      const response = await authenticatedFetch(user, isDevMode, '/api/settings/save-api-key', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           apiKey: apiKey.trim(),
-          uid: user?.uid,
         }),
       });
 
@@ -175,10 +171,9 @@ export default function SettingsPage() {
     }
 
     try {
-      const response = await fetch('/api/settings/delete-api-key', {
+      const response = await authenticatedFetch(user, isDevMode, '/api/settings/delete-api-key', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ uid: user?.uid }),
       });
 
       const data = await response.json();
@@ -197,11 +192,10 @@ export default function SettingsPage() {
   const handleSaveClosures = async () => {
     setIsSavingClosures(true);
     try {
-      const response = await fetch('/api/settings/save-school-closures', {
+      const response = await authenticatedFetch(user, isDevMode, '/api/settings/save-school-closures', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          uid: user?.uid,
           closureDates: schoolClosureDates.trim(),
         }),
       });
@@ -222,11 +216,10 @@ export default function SettingsPage() {
   const handleSaveSchoolName = async () => {
     setIsSavingSchoolName(true);
     try {
-      const response = await fetch('/api/settings/save-school-name', {
+      const response = await authenticatedFetch(user, isDevMode, '/api/settings/save-school-name', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          uid: user?.uid,
           schoolName: schoolName.trim(),
         }),
       });
@@ -249,12 +242,11 @@ export default function SettingsPage() {
   const handleSaveGeminiModel = async () => {
     setIsSavingModel(true);
     try {
-      const response = await fetch('/api/settings/save-gemini-model', {
+      const response = await authenticatedFetch(user, isDevMode, '/api/settings/save-gemini-model', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          uid: user?.uid,
-          geminiModel: geminiModel,
+          geminiModel,
         }),
       });
 
@@ -358,12 +350,12 @@ export default function SettingsPage() {
             </CardContent>
           </Card>
 
-          {/* Gemini Model Selection */}
+          {/* Gemini Model */}
           <Card>
             <CardHeader>
-              <CardTitle>🤖 Gemini AI 모델 선택</CardTitle>
+              <CardTitle>🤖 Gemini AI 모델</CardTitle>
               <CardDescription>
-                창체 누가기록 생성에 사용할 Gemini 모델을 선택합니다
+                모든 AI 생성 기능은 Gemini 2.5 Flash 모델로 고정됩니다
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
@@ -371,17 +363,9 @@ export default function SettingsPage() {
                 <label className="text-sm font-medium mb-2 block">
                   사용할 모델
                 </label>
-                <select
-                  value={geminiModel}
-                  onChange={(e) => setGeminiModel(e.target.value)}
-                  className="w-full p-3 border rounded-lg bg-white"
-                >
-                  <option value="gemini-2.0-flash">Gemini 2.0 Flash (빠른 속도)</option>
-                  <option value="gemini-2.5-flash">Gemini 2.5 Flash (향상된 성능)</option>
-                </select>
-                <p className="text-xs text-muted-foreground mt-1">
-                  현재 선택: <strong>{geminiModel}</strong>
-                </p>
+                <div className="w-full p-3 border rounded-lg bg-gray-50 font-medium">
+                  Gemini 2.5 Flash
+                </div>
               </div>
 
               <Button
@@ -389,16 +373,16 @@ export default function SettingsPage() {
                 disabled={isSavingModel}
                 className="w-full"
               >
-                {isSavingModel ? '저장 중...' : '💾 모델 저장'}
+                {isSavingModel ? '저장 중...' : '💾 고정 모델 저장'}
               </Button>
 
               <div className="p-3 bg-blue-50 border border-blue-200 rounded-lg">
                 <p className="text-sm text-blue-800 mb-2">
-                  <strong>💡 모델 선택 가이드:</strong>
+                  <strong>💡 모델 안내:</strong>
                 </p>
                 <ul className="text-xs text-blue-700 space-y-1 ml-4">
-                  <li>• <strong>Gemini 2.0 Flash</strong>: 빠른 응답 속도, 기본 누가기록 작성에 적합</li>
-                  <li>• <strong>Gemini 2.5 Flash</strong>: 향상된 이해력과 정확도, 더 상세한 누가기록 작성</li>
+                  <li>• <strong>Gemini 2.5 Flash</strong>만 사용합니다.</li>
+                  <li>• 기존에 저장된 2.0 설정이 있어도 서버에서 2.5 Flash로 처리합니다.</li>
                 </ul>
               </div>
             </CardContent>

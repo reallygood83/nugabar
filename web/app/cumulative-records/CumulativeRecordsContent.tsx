@@ -2,13 +2,14 @@
 
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/lib/auth-context';
+import { authenticatedFetch } from '@/lib/authenticated-fetch';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { YouTubeSubscribeModal } from '@/components/common/YouTubeSubscribeModal';
 
 export default function CumulativeRecordsContent() {
-  const { user } = useAuth();
+  const { user, isDevMode } = useAuth();
   const router = useRouter();
   const searchParams = useSearchParams();
 
@@ -62,13 +63,12 @@ export default function CumulativeRecordsContent() {
           return cleaned;
         });
 
-      const response = await fetch('/api/cumulative-records/generate', {
+      const response = await authenticatedFetch(user, isDevMode, '/api/cumulative-records/generate', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           behaviorText: behaviorText.trim(),
           recordCount,
-          uid: user?.uid,
           excludedDates: parsedDates,
         }),
       });
@@ -145,11 +145,10 @@ export default function CumulativeRecordsContent() {
     setIsSaving(true);
     try {
       // 누가기록을 학생별로 저장하는 API 호출
-      const response = await fetch(`/api/classes/${classId}/students/${studentId}/records/save`, {
+      const response = await authenticatedFetch(user, isDevMode, `/api/classes/${classId}/students/${studentId}/records/save`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          uid: user?.uid,
           records: generatedRecords,
           behaviorText, // 행동특성도 함께 저장
         }),

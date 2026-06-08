@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import pdf from 'pdf-parse-fork';
-import { getApp } from 'firebase/app';
-import { getFirestore, collection, addDoc, serverTimestamp } from 'firebase/firestore';
+import { Timestamp } from 'firebase-admin/firestore';
+import { requireAuth } from '@/lib/auth-server';
+import { db } from '@/lib/firebase-admin';
 
 // Activity 타입 정의
 interface Activity {
@@ -143,20 +144,15 @@ function normalizeDate(dateStr: string): string {
 
 export async function POST(request: NextRequest) {
   try {
+    const auth = await requireAuth(request);
+    if ('error' in auth) return auth.error;
+
     const formData = await request.formData();
     const pdfFile = formData.get('pdf') as File;
-    const userId = formData.get('userId') as string;
 
     if (!pdfFile) {
       return NextResponse.json(
         { success: false, error: 'PDF 파일이 없습니다.' },
-        { status: 400 }
-      );
-    }
-
-    if (!userId) {
-      return NextResponse.json(
-        { success: false, error: '사용자 ID가 필요합니다.' },
         { status: 400 }
       );
     }
@@ -184,11 +180,9 @@ export async function POST(request: NextRequest) {
 
     // Firebase에 저장
     try {
-      const app = getApp();
-      const db = getFirestore(app);
-
-      await addDoc(collection(db, 'users', userId, 'creative-activities'), {
-        uploadedAt: serverTimestamp(),
+      await db.collection('users').doc(auth.uid).collection('creativeActivities').add({
+        userId: auth.uid,
+        uploadedAt: Timestamp.now(),
         pdfFileName: pdfFile.name,
         activities: activities,
         generatedRecords: []

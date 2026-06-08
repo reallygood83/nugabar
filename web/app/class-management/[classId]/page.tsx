@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/lib/auth-context';
+import { authenticatedFetch } from '@/lib/authenticated-fetch';
 import { useRouter, useParams } from 'next/navigation';
 import NavigationHeader from '@/components/common/NavigationHeader';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
@@ -27,7 +28,7 @@ interface ClassData {
 }
 
 export default function ClassDetailPage() {
-  const { user } = useAuth();
+  const { user, isDevMode } = useAuth();
   const router = useRouter();
   const params = useParams();
   const classId = params.classId as string;
@@ -58,10 +59,9 @@ export default function ClassDetailPage() {
     if (!user) return;
 
     try {
-      const response = await fetch('/api/classes/list', {
+      const response = await authenticatedFetch(user, isDevMode, '/api/classes/list', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ uid: user.uid }),
       });
 
       const data = await response.json();
@@ -79,10 +79,9 @@ export default function ClassDetailPage() {
 
     setIsLoading(true);
     try {
-      const response = await fetch(`/api/classes/${classId}/students/list`, {
+      const response = await authenticatedFetch(user, isDevMode, `/api/classes/${classId}/students/list`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ uid: user.uid }),
       });
 
       const data = await response.json();
@@ -104,11 +103,10 @@ export default function ClassDetailPage() {
 
     setIsAddingStudent(true);
     try {
-      const response = await fetch(`/api/classes/${classId}/students/add`, {
+      const response = await authenticatedFetch(user, isDevMode, `/api/classes/${classId}/students/add`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          uid: user.uid,
           number: studentNumber,
           name: studentName,
         }),
@@ -198,11 +196,10 @@ export default function ClassDetailPage() {
 
     setIsAddingBulk(true);
     try {
-      const response = await fetch(`/api/classes/${classId}/students/add-bulk`, {
+      const response = await authenticatedFetch(user, isDevMode, `/api/classes/${classId}/students/add-bulk`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          uid: user.uid,
           students: parsedStudents,
         }),
       });

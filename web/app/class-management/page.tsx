@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/lib/auth-context';
+import { authenticatedFetch } from '@/lib/authenticated-fetch';
 import { useRouter } from 'next/navigation';
 import NavigationHeader from '@/components/common/NavigationHeader';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
@@ -20,7 +21,7 @@ interface Class {
 }
 
 export default function ClassManagementPage() {
-  const { user } = useAuth();
+  const { user, isDevMode } = useAuth();
   const router = useRouter();
   const [classes, setClasses] = useState<Class[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -44,10 +45,9 @@ export default function ClassManagementPage() {
 
     setIsLoading(true);
     try {
-      const response = await fetch('/api/classes/list', {
+      const response = await authenticatedFetch(user, isDevMode, '/api/classes/list', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ uid: user.uid }),
       });
 
       const data = await response.json();
@@ -66,11 +66,10 @@ export default function ClassManagementPage() {
 
     setIsCreating(true);
     try {
-      const response = await fetch('/api/classes/create', {
+      const response = await authenticatedFetch(user, isDevMode, '/api/classes/create', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          uid: user.uid,
           grade,
           classNumber,
           semester,

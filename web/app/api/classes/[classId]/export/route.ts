@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/firebase-admin';
+import { requireAuth } from '@/lib/auth-server';
 import { generateClassExcel, StudentRecord } from '@/lib/excel-export';
 
 export async function POST(
@@ -9,21 +10,23 @@ export async function POST(
   try {
     console.log('[Excel Export] 시작');
 
+    const auth = await requireAuth(request);
+    if ('error' in auth) return auth.error;
+
     // Step 1: Request 파싱
-    let uid, classId;
+    let classId;
+    const uid = auth.uid;
     try {
-      const body = await request.json();
-      uid = body.uid;
       const resolvedParams = await params;
       classId = resolvedParams.classId;
-      console.log('[Excel Export] Request 파싱 완료:', { uid, classId });
+      console.log('[Excel Export] Request 파싱 완료:', { classId });
     } catch (parseError: any) {
       console.error('[Excel Export] Request 파싱 에러:', parseError);
       throw new Error(`Request 파싱 실패: ${parseError.message}`);
     }
 
-    if (!uid || !classId) {
-      console.error('[Excel Export] 필수 정보 누락:', { uid, classId });
+    if (!classId) {
+      console.error('[Excel Export] 필수 정보 누락:', { classId });
       return NextResponse.json(
         { success: false, error: '필수 정보가 누락되었습니다' },
         { status: 400 }

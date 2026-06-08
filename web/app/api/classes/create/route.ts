@@ -1,11 +1,16 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/firebase-admin';
+import { requireAuth } from '@/lib/auth-server';
 
 export async function POST(request: NextRequest) {
   try {
-    const { uid, grade, classNumber, semester, year } = await request.json();
+    const auth = await requireAuth(request);
+    if ('error' in auth) return auth.error;
 
-    if (!uid || !grade || !classNumber) {
+    const { grade, classNumber, semester, year } = await request.json();
+    const uid = auth.uid;
+
+    if (!grade || !classNumber) {
       return NextResponse.json(
         { success: false, error: '필수 정보가 누락되었습니다' },
         { status: 400 }
