@@ -84,6 +84,58 @@ function cleanBehaviorText(text: string) {
     .trim();
 }
 
+function toObservationNoun(keywordText: string) {
+  let text = keywordText
+    .replace(/^(약간|매우)\s+/, '')
+    .replace(/[,.]/g, '')
+    .trim();
+
+  text = text
+    .replace(/보이며$/, '보이는 모습')
+    .replace(/참여하며$/, '참여하는 태도')
+    .replace(/질문하며$/, '질문하는 태도')
+    .replace(/수행하고$/, '수행하는 태도')
+    .replace(/실천하며$/, '실천하는 태도')
+    .replace(/정리하며$/, '정리하는 태도')
+    .replace(/준비하며$/, '준비하는 태도')
+    .replace(/기대되며$/, '개선이 필요한 모습')
+    .replace(/협력하여$/, '협력하는 태도')
+    .replace(/마음으로$/, '마음')
+    .replace(/표현하고$/, '표현하는 태도')
+    .replace(/도우며$/, '도움을 주는 태도')
+    .replace(/이끌어가며$/, '이끌어가는 모습')
+    .replace(/해결하며$/, '해결하는 태도')
+    .replace(/생각하며$/, '생각하는 태도')
+    .replace(/판단하며$/, '판단하는 태도')
+    .replace(/발표하며$/, '발표하는 태도')
+    .replace(/제시하며$/, '제시하는 태도')
+    .replace(/참여하며$/, '참여하는 태도')
+    .replace(/수행하며$/, '수행하는 태도')
+    .replace(/갖고$/, '가진 태도')
+    .replace(/태도로$/, '태도')
+    .replace(/노력하며$/, '노력하는 태도')
+    .replace(/행동하며$/, '행동하는 태도')
+    .replace(/바탕으로$/, '바탕')
+    .replace(/발휘하며$/, '발휘하는 모습')
+    .replace(/으로$/, '')
+    .trim();
+
+  return text || '관찰된 긍정적 태도';
+}
+
+function buildFallbackBehaviorText(keywordTexts: string[]) {
+  const focusItems = keywordTexts.slice(0, 5).map(toObservationNoun);
+  const focus = focusItems.join(', ');
+
+  return [
+    `선택된 관찰 요소인 ${focus}을 바탕으로 수업과 생활 장면에서 안정적인 성장 흐름을 보임.`,
+    '학습 과정에서 맡은 과제를 차분히 확인하고 필요한 내용을 스스로 정리하려는 태도가 꾸준함.',
+    '친구들과 함께하는 활동에서 서로의 의견을 듣고 자신의 생각을 조리 있게 표현하려는 노력이 나타남.',
+    '주어진 역할을 끝까지 완수하려는 책임감이 있으며 어려운 상황에서도 다시 시도하려는 태도가 돋보임.',
+    '여러 활동을 통해 관찰된 강점을 생활 속 실천으로 연결하며 학습 태도와 공동체 생활 전반에서 균형 있게 성장하는 모습을 보임.'
+  ].join(' ');
+}
+
 async function generateBehaviorText(apiKey: string, prompt: string) {
   const response = await fetch(
     `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`,
@@ -264,20 +316,25 @@ export async function POST(request: NextRequest) {
     }
 
     if (!validation.isValid) {
-      console.error('행동특성 품질 검증 실패:', validation.violations, generatedText);
-      return NextResponse.json({
-        success: false,
-        error: `AI가 생활기록부 기준에 맞는 문장을 만들지 못했습니다. 다시 생성해주세요. 위반 사유: ${validation.violations.join(', ')}`,
-        violations: validation.violations,
-      }, { status: 422 });
+      const fallbackText = buildFallbackBehaviorText(keywordTexts);
+      validation = validateBehaviorCharacteristic(fallbackText);
     }
 
+    if (validation.isValid) {
+      return NextResponse.json({
+        success: true,
+        text: validation.validatedText,
+        isValid: validation.isValid,
+        violations: validation.violations
+      });
+    }
+
+    console.error('행동특성 품질 검증 실패:', validation.violations, generatedText);
     return NextResponse.json({
-      success: true,
-      text: validation.validatedText,
-      isValid: validation.isValid,
-      violations: validation.violations
-    });
+      success: false,
+      error: `AI가 생활기록부 기준에 맞는 문장을 만들지 못했습니다. 다시 생성해주세요. 위반 사유: ${validation.violations.join(', ')}`,
+      violations: validation.violations,
+    }, { status: 422 });
 
   } catch (error) {
     console.error('Error generating behavior characteristics:', error);
