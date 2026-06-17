@@ -7,7 +7,6 @@ import PDFUploader from '@/components/creative-activities/PDFUploader';
 import ActivityTable from '@/components/creative-activities/ActivityTable';
 import RecordGenerator from '@/components/creative-activities/RecordGenerator';
 import GeneratedRecordsList from '@/components/creative-activities/GeneratedRecordsList';
-import { YouTubeSubscribeModal } from '@/components/common/YouTubeSubscribeModal';
 
 interface Activity {
   id: string;
@@ -35,7 +34,6 @@ export default function CreativeActivitiesContent() {
   const [generatedRecords, setGeneratedRecords] = useState<GeneratedRecord[]>([]);
   const [uploadError, setUploadError] = useState('');
   const [uploadSuccess, setUploadSuccess] = useState(false);
-  const [isGenerating, setIsGenerating] = useState(false);
 
   // 인증되지 않은 사용자 리다이렉트 (클라이언트 사이드에서만 실행)
   useEffect(() => {
@@ -200,7 +198,6 @@ export default function CreativeActivitiesContent() {
               <RecordGenerator
                 selectedActivities={selectedActivities}
                 onGenerationComplete={handleGenerationComplete}
-                onGeneratingChange={setIsGenerating}
               />
             )}
           </div>
@@ -227,12 +224,6 @@ export default function CreativeActivitiesContent() {
         </div>
       </div>
 
-      {/* YouTube Subscribe Modal */}
-      <YouTubeSubscribeModal
-        isOpen={isGenerating}
-        onClose={() => {}}
-        storageKey="creative-activities-modal-shown"
-      />
     </div>
   );
 }
