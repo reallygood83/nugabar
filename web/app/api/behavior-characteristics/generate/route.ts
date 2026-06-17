@@ -74,6 +74,60 @@ const keywordData: Record<string, string> = {
   area_exploration: '다양한 영역을 탐색하며'
 };
 
+function cleanBehaviorText(text: string) {
+  return text
+    .replace(/^```(?:text)?\s*/i, '')
+    .replace(/\s*```$/i, '')
+    .replace(/^행동특성\s*및\s*종합의견\s*[:：]\s*/i, '')
+    .replace(/\n+/g, ' ')
+    .replace(/\s{2,}/g, ' ')
+    .trim();
+}
+
+async function generateBehaviorText(apiKey: string, prompt: string) {
+  const response = await fetch(
+    `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`,
+    {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        contents: [{
+          parts: [{ text: prompt }]
+        }],
+        generationConfig: {
+          temperature: 0.45,
+          maxOutputTokens: 1536,
+        }
+      })
+    }
+  );
+
+  const data = await response.json();
+
+  if (!response.ok) {
+    console.error('Gemini API 오류:', data);
+    throw new Error(data.error?.message || 'AI 생성 실패');
+  }
+
+  if (!data.candidates || !Array.isArray(data.candidates) || data.candidates.length === 0) {
+    console.error('예상치 못한 Gemini API 응답:', data);
+    throw new Error('AI 응답 형식이 올바르지 않습니다.');
+  }
+
+  const candidate = data.candidates[0];
+  if (!candidate.content || !candidate.content.parts || candidate.content.parts.length === 0) {
+    console.error('Gemini API 응답에 content가 없습니다:', candidate);
+    throw new Error('AI가 텍스트를 생성하지 못했습니다.');
+  }
+
+  const generatedText = cleanBehaviorText(candidate.content.parts[0].text || '');
+  if (!generatedText) {
+    throw new Error('AI가 빈 텍스트를 생성했습니다.');
+  }
+
+  return generatedText;
+}
+
 export async function POST(request: NextRequest) {
   try {
     const auth = await requireAuth(request);
@@ -102,12 +156,18 @@ export async function POST(request: NextRequest) {
     });
 
     const keywordList = keywordTexts.join(', ');
-    const prompt = `당신은 초등학교 교사입니다. 다음 키워드들을 바탕으로 학생의 행동특성 및 종합의견을 작성해주세요.
+    const prompt = `당신은 대한민국 초등학교 담임교사의 생활기록부 문장을 돕는 전문 작성자입니다. 다음 키워드들을 바탕으로 학생의 행동특성 및 종합의견을 작성해주세요.
 
 키워드: ${keywordList}
 
+## 출력 형식
+- 제목, 라벨, 따옴표, 마크다운 없이 본문만 출력
+- 하나의 자연스러운 문단으로 출력
+- 반드시 4~6문장, 350~480자 사이로 작성
+- 각 문장은 마침표(.)로 끝낼 것
+
 ## 📋 NEIS 기재 규칙 (절대 준수)
-- 글자수: 400-500자 (공백 포함)
+- 글자수: 350-480자 (공백 포함)
 - 형식: 하나의 연결된 문단
 - **어조: 명사형 종결 (~함, ~임, ~됨, ~음, ~을 보임, ~하는 모습을 보임)**
 - 주어 생략: 모든 문장에서 주어('이 학생은', '학생이' 등) 생략 필수
@@ -169,12 +229,17 @@ export async function POST(request: NextRequest) {
    - 관찰된 사실만 객관적으로 서술
 
 5. **글자 수 최적화**
-   - 400-500자 범위 준수 (너무 길면 산만함)
+   - 350-480자 범위 준수 (너무 짧으면 관찰 근거가 부족하고, 너무 길면 산만함)
    - 핵심 내용만 간결하고 명확하게 서술
+
+6. **관찰 근거 확장**
+   - 선택된 키워드를 단순히 이어 붙이지 말고 학습 태도, 관계 태도, 과제 수행, 성장 모습으로 나누어 서술
+   - "친구를 도움"처럼 단편 표현으로 끝내지 말고 어떤 태도와 변화가 드러나는지 구체화
+   - "돕는함", "대하는함", "보이는함", "참여하는함"처럼 관형형 뒤에 함을 붙인 표현 절대 금지
 
 ## 작성 예시
 ✅ 올바른 예시 (종결어 다양화 + 중복 없음):
-"수업에 적극적으로 참여하며 새로운 내용을 빠르게 이해함. 친구들과 협력하여 과제를 완수하고, 어려움에 처한 친구를 자연스럽게 도움. 맡은 일에 대한 책임감이 강하며, 꾸준한 노력으로 학습 능력이 향상됨. 자신의 의견을 명확하게 드러냄."
+"수업에 안정적으로 참여하며 새로운 내용을 이해하려는 태도가 꾸준함. 모둠 활동에서 친구들의 의견을 차분히 듣고 자신의 생각을 분명하게 표현함. 과제 수행 과정에서 필요한 자료를 스스로 확인하고 끝까지 완성하려는 책임감을 보임. 어려움을 겪는 친구에게 먼저 다가가 방법을 함께 찾으며 협력적인 관계를 형성함. 다양한 활동을 통해 학습과 생활 전반에서 성실하고 배려 깊은 성장을 보임."
 
 ❌ 잘못된 예시 (종결어 중복, 표현 반복):
 "적극적으로 참여함. 적극적으로 도움을 줌함. 책임감이 강함. 책임감을 보임. 긍정적인 태도를 보임함. 긍정적으로 참여함. 의견을 드러냄함."
@@ -182,64 +247,30 @@ export async function POST(request: NextRequest) {
 
 행동특성 및 종합의견:`;
 
-    // Gemini API 호출 (gemini-2.5-flash 모델 사용)
-    const response = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`,
-      {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          contents: [{
-            parts: [{ text: prompt }]
-          }],
-          generationConfig: {
-            temperature: 0.7,
-            maxOutputTokens: 1024,
-          }
-        })
-      }
-    );
+    let generatedText = await generateBehaviorText(apiKey, prompt);
+    let validation = validateBehaviorCharacteristic(generatedText);
 
-    const data = await response.json();
+    if (!validation.isValid) {
+      const retryPrompt = `${prompt}
 
-    // Gemini API 응답 에러 처리
-    if (!response.ok) {
-      console.error('Gemini API 오류:', data);
-      return NextResponse.json({
-        success: false,
-        error: data.error?.message || 'AI 생성 실패'
-      }, { status: 500 });
+이전 생성 결과는 품질 검사를 통과하지 못했습니다.
+검사 위반: ${validation.violations.join(', ')}
+
+아래 문장을 참고하되 그대로 복사하지 말고, 반드시 350~480자의 자연스러운 한 문단으로 다시 작성하세요.
+이전 결과: ${generatedText}`;
+
+      generatedText = await generateBehaviorText(apiKey, retryPrompt);
+      validation = validateBehaviorCharacteristic(generatedText);
     }
 
-    // 응답 구조 검증 및 텍스트 추출
-    if (!data.candidates || !Array.isArray(data.candidates) || data.candidates.length === 0) {
-      console.error('예상치 못한 Gemini API 응답:', data);
+    if (!validation.isValid) {
+      console.error('행동특성 품질 검증 실패:', validation.violations, generatedText);
       return NextResponse.json({
         success: false,
-        error: 'AI 응답 형식이 올바르지 않습니다.'
-      }, { status: 500 });
+        error: 'AI가 생활기록부 기준에 맞는 문장을 만들지 못했습니다. 키워드를 2개 이상 선택해 다시 생성해주세요.',
+        violations: validation.violations,
+      }, { status: 422 });
     }
-
-    const candidate = data.candidates[0];
-    if (!candidate.content || !candidate.content.parts || candidate.content.parts.length === 0) {
-      console.error('Gemini API 응답에 content가 없습니다:', candidate);
-      return NextResponse.json({
-        success: false,
-        error: 'AI가 텍스트를 생성하지 못했습니다.'
-      }, { status: 500 });
-    }
-
-    const generatedText = candidate.content.parts[0].text || '';
-
-    if (!generatedText.trim()) {
-      return NextResponse.json({
-        success: false,
-        error: 'AI가 빈 텍스트를 생성했습니다.'
-      }, { status: 500 });
-    }
-
-    // NEIS 규정 검증 및 자동 수정 (Apps Script 로직 100% 적용)
-    const validation = validateBehaviorCharacteristic(generatedText);
 
     return NextResponse.json({
       success: true,

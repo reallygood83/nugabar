@@ -61,6 +61,10 @@ export function checkNeisCompliance(text: string, maxLength: number = 500): {
     violations.push('빈 텍스트');
   }
 
+  if (maxLength === 500 && characterCount < 300) {
+    violations.push(`글자 수 부족 (${characterCount}자 / 최소 300자)`);
+  }
+
   // 2. 마침표 종결 검증 (Apps Script 로직)
   const hasProperEnding = /[.!?]$/.test(trimmedText);
   if (!hasProperEnding) {
@@ -75,6 +79,7 @@ export function checkNeisCompliance(text: string, maxLength: number = 500): {
   const validEndings = /(함|임|됨|음|냄|줌|남|감|봄|듦|짐|킴|침|림|룸|살핌|느낌|드러냄|보여줌|나타냄|이룸|을 보임|를 보임|하는 모습을 보임|는 모습을 보임|하는 특성을 보임|에 해당함|으로 나타남|하며 성장함)$/;
 
   // 금지된 어미 패턴 (Apps Script 로직 + 명사형 중복 패턴)
+  const malformedNounEndings = /(는함|은함|ㄴ함|고함|며함|여함|서함|게함|에게함)$/;
   const prohibitedEndings = /(습니함|했습니함|였습니함|았습니함|었습니함|했습니다|였습니다|았습니다|었습니다|입니다|합니다|했다|한다|이다|해요|했어요|아요|어요|살핌함|느낌함|드러냄함|보여줌함|나타냄함|이룸함|[가-힣]ㅁ함)$/;
 
   sentences.forEach((sentence, index) => {
@@ -82,7 +87,9 @@ export function checkNeisCompliance(text: string, maxLength: number = 500): {
     if (trimmed.length === 0) return;
 
     // 금지된 어미 체크
-    if (prohibitedEndings.test(trimmed)) {
+    if (malformedNounEndings.test(trimmed)) {
+      invalidEndings.push(`문장 ${index + 1}: 잘못된 명사형 어미 사용 (${trimmed.match(malformedNounEndings)?.[0]})`);
+    } else if (prohibitedEndings.test(trimmed)) {
       invalidEndings.push(`문장 ${index + 1}: 금지된 어미 사용 (${trimmed.match(prohibitedEndings)?.[0]})`);
     }
     // 올바른 명사형 종결어미 체크
@@ -223,6 +230,15 @@ export function ensureNeisCompliance(text: string, maxLength: number = 500): str
     sentence = sentence.replace(/킴함$/, '킴');    // 끼다 → 끼침
     sentence = sentence.replace(/침함$/, '침');    // 하다 → 함 (끼침, 꺼침 등)
     sentence = sentence.replace(/림함$/, '림');    // 이루다 → 이룸
+    sentence = sentence.replace(/는함$/, '는 모습을 보임');
+    sentence = sentence.replace(/은함$/, '은 모습을 보임');
+    sentence = sentence.replace(/ㄴ함$/, '는 모습을 보임');
+    sentence = sentence.replace(/고함$/, '는 모습을 보임');
+    sentence = sentence.replace(/며함$/, '는 모습을 보임');
+    sentence = sentence.replace(/여함$/, '는 모습을 보임');
+    sentence = sentence.replace(/서함$/, '는 모습을 보임');
+    sentence = sentence.replace(/에게함$/, '에게 도움을 줌');
+    sentence = sentence.replace(/게함$/, '는 모습을 보임');
 
     // 2단계: 형용사형 어미 변환 (모든 문장에 적용, if 블록 밖)
     sentence = sentence.replace(/커요$/, '큼');
