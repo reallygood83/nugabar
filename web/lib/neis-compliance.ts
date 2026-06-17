@@ -337,10 +337,20 @@ export function validateBehaviorCharacteristic(text: string): {
 
   if (!compliance.isCompliant) {
     const validatedText = ensureNeisCompliance(text, 500);
+    const correctedCompliance = checkNeisCompliance(validatedText, 500);
+
+    if (correctedCompliance.isCompliant) {
+      return {
+        isValid: true,
+        validatedText,
+        violations: []
+      };
+    }
+
     return {
       isValid: false,
       validatedText,
-      violations: compliance.violations
+      violations: correctedCompliance.violations
     };
   }
 
@@ -363,10 +373,20 @@ export function validateCumulativeRecord(text: string): {
 
   if (!compliance.isCompliant) {
     const validatedText = ensureNeisCompliance(text, 150);
+    const correctedCompliance = checkNeisCompliance(validatedText, 150);
+
+    if (correctedCompliance.isCompliant) {
+      return {
+        isValid: true,
+        validatedText,
+        violations: []
+      };
+    }
+
     return {
       isValid: false,
       validatedText,
-      violations: compliance.violations
+      violations: correctedCompliance.violations
     };
   }
 

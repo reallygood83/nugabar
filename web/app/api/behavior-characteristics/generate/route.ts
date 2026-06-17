@@ -267,7 +267,7 @@ export async function POST(request: NextRequest) {
       console.error('행동특성 품질 검증 실패:', validation.violations, generatedText);
       return NextResponse.json({
         success: false,
-        error: 'AI가 생활기록부 기준에 맞는 문장을 만들지 못했습니다. 키워드를 2개 이상 선택해 다시 생성해주세요.',
+        error: `AI가 생활기록부 기준에 맞는 문장을 만들지 못했습니다. 다시 생성해주세요. 위반 사유: ${validation.violations.join(', ')}`,
         violations: validation.violations,
       }, { status: 422 });
     }

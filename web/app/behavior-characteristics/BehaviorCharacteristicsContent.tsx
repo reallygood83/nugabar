@@ -279,7 +279,7 @@ export default function BehaviorCharacteristicsContent() {
           <div className="mt-4 flex gap-2">
             <Button
               onClick={handleGenerate}
-              disabled={isGenerating || selectedKeywords.length === 0}
+              disabled={isGenerating || Object.keys(selectedKeywords).length === 0}
               className="flex-1"
             >
               {isGenerating ? '생성 중...' : '행동특성 생성'}
