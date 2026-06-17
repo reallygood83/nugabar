@@ -84,56 +84,101 @@ function cleanBehaviorText(text: string) {
     .trim();
 }
 
-function toObservationNoun(keywordText: string) {
-  let text = keywordText
-    .replace(/^(약간|매우)\s+/, '')
-    .replace(/[,.]/g, '')
-    .trim();
+const fallbackSentences: Record<string, string> = {
+  active_participation: '수업 활동에 꾸준히 참여하며 주어진 과제와 토의 과정에서 자신의 역할을 성실히 수행하는 태도가 나타남.',
+  high_concentration: '수업 중 설명과 활동 흐름에 주의를 기울이며 핵심 내용을 놓치지 않으려는 집중력이 안정적으로 드러남.',
+  frequent_questions: '궁금한 내용을 그냥 넘기지 않고 질문을 통해 확인하며 배움의 과정을 스스로 넓혀 가려는 태도가 돋보임.',
+  task_completion: '맡은 과제를 끝까지 완성하려는 책임감이 있으며 필요한 절차를 차분히 확인하며 수행하는 모습이 관찰됨.',
+  self_directed_learning: '학습 계획을 스스로 세우고 실천하려는 태도가 있으며 배운 내용을 자신의 방식으로 정리하려는 노력이 나타남.',
+  note_taking: '수업 내용을 체계적으로 정리하며 중요한 내용을 구분해 기록하려는 학습 습관이 꾸준히 형성됨.',
+  homework_diligent: '가정 학습 과제를 빠짐없이 준비하며 학습에 필요한 기본 책임감을 꾸준히 실천하는 모습이 확인됨.',
+  learning_preparation: '수업에 필요한 준비물을 스스로 챙기고 활동에 바로 참여할 수 있도록 준비하는 태도가 안정적임.',
+  attention_needed: '수업 중 주의가 흐트러지는 순간이 있으나 안내를 받으면 다시 과제에 집중하려는 태도가 나타남.',
+  passive_participation: '활동 참여에는 신중한 편이나 익숙한 과제에서는 자신의 생각을 표현하려는 변화가 조금씩 관찰됨.',
+  collaborative: '모둠 활동에서 친구들과 역할을 나누고 함께 과제를 해결하려는 협력적인 태도가 꾸준히 나타남.',
+  caring: '친구의 상황을 살피고 필요한 도움을 건네려는 배려심이 있으며 공동체 안에서 따뜻한 태도를 보임.',
+  leadership: '모둠 활동에서 필요한 역할을 조율하고 친구들이 과제에 참여할 수 있도록 돕는 리더십을 보임.',
+  conflict_resolution: '의견 차이가 생겼을 때 상대의 생각을 들으며 해결 방법을 찾으려는 태도가 나타남.',
+  communication_skills: '자신의 생각을 차분히 표현하고 친구의 의견을 들으며 대화에 참여하는 의사소통 태도가 돋보임.',
+  inclusive_behavior: '다양한 친구들과 어울리며 서로의 차이를 인정하고 함께 활동하려는 포용적인 태도를 보임.',
+  empathy: '친구의 마음과 상황을 이해하려는 태도가 있으며 주변의 어려움을 세심하게 살피는 모습이 나타남.',
+  helpful_attitude: '어려움을 겪는 친구에게 먼저 다가가 방법을 함께 찾고 도움을 주려는 태도가 꾸준함.',
+  friendship_building: '새로운 관계를 맺는 과정에서 자연스럽게 대화를 시도하며 친구들과 긍정적인 관계를 형성함.',
+  shy_interaction: '친구들과의 관계에서는 신중한 태도를 보이며 작은 활동부터 교류 범위를 넓혀 가는 모습이 관찰됨.',
+  quick_understanding: '새로운 내용을 빠르게 이해하고 활동에 적용하려는 모습이 있으며 학습 흐름을 파악하는 힘이 돋보임.',
+  good_application: '배운 내용을 다양한 상황에 연결해 보려는 태도가 있으며 과제 해결 과정에서 응용력이 나타남.',
+  creative_thinking: '활동 과정에서 새로운 생각을 제안하고 익숙한 방법 외의 해결 가능성을 탐색하려는 태도가 돋보임.',
+  logical_expression: '생각을 순서에 맞게 정리하여 표현하고 까닭을 들어 설명하려는 논리적인 태도가 나타남.',
+  analytical_thinking: '문제 해결 과정에서 자료와 조건을 차분히 비교하고 원인을 분석하려는 모습이 돋보임.',
+  problem_solving: '어려운 과제 앞에서도 포기하지 않고 해결 단서를 찾으며 끝까지 시도하려는 태도가 나타남.',
+  critical_thinking: '주어진 내용을 그대로 받아들이기보다 여러 관점에서 살피고 판단하려는 사고 태도가 관찰됨.',
+  memory_retention: '학습한 내용을 잘 떠올리고 필요한 상황에서 활용하며 배움의 내용을 안정적으로 유지하는 모습을 보임.',
+  synthesis_skills: '여러 정보를 연결해 전체 흐름을 파악하고 판단하려는 종합적인 사고 태도가 나타남.',
+  needs_reinforcement: '기초 개념을 다시 확인하며 이해를 다지려는 노력이 필요하나 학습 과정에 참여하려는 태도는 꾸준함.',
+  active_presentation: '발표 상황에서 자신의 생각을 또렷하게 전하려는 태도가 있으며 활동 결과를 공유하는 데 적극적임.',
+  discussion_leader: '토론 과정에서 의견을 정리하고 친구들의 생각을 이어 주며 활동 흐름을 이끄는 모습을 보임.',
+  idea_contributor: '활동 중 새로운 생각을 제시하고 모둠 과제의 방향을 넓히는 데 긍정적으로 기여함.',
+  group_activity_leader: '모둠 활동에서 필요한 일을 먼저 확인하고 친구들이 함께 참여하도록 돕는 모습이 나타남.',
+  volunteer_actively: '공동체 활동에 자발적으로 참여하며 맡은 일을 성실히 수행하려는 태도가 돋보임.',
+  class_responsibility: '학급에서 맡은 역할을 꾸준히 수행하며 공동체 생활에 필요한 책임감을 실천함.',
+  event_participation: '학교 행사와 학급 활동에 성실히 참여하며 공동체의 일원으로서 필요한 역할을 다하려는 태도를 보임.',
+  opinion_expression: '활동 상황에서 자신의 의견을 분명히 표현하고 친구들과 생각을 나누려는 태도가 나타남.',
+  presentation_anxiety: '발표 상황에서는 다소 신중하지만 준비한 내용을 차분히 전하려는 노력이 관찰됨.',
+  observer_role: '활동 흐름을 신중하게 살피고 필요한 정보를 차분히 확인하며 과제에 접근하는 태도를 보임.',
+  responsible: '맡은 일을 가볍게 여기지 않고 끝까지 완수하려는 책임감이 생활 속에서 꾸준히 드러남.',
+  diligent: '학습과 생활 전반에서 성실한 태도를 유지하며 주어진 일을 차분히 수행하는 모습이 안정적임.',
+  patient: '어려운 과제에서도 쉽게 포기하지 않고 시간을 들여 해결하려는 끈기 있는 태도가 나타남.',
+  organized: '활동에 필요한 자료와 생각을 체계적으로 정리하며 과제를 순서 있게 처리하는 모습을 보임.',
+  curious: '새로운 내용에 관심을 가지고 더 알아보려는 호기심이 있으며 배움의 범위를 넓히려는 태도가 나타남.',
+  honest: '자신의 생각과 행동을 솔직하게 돌아보며 생활 속에서 정직한 태도를 실천함.',
+  considerate: '상황을 살피며 친구를 배려하고 공동체 안에서 차분하고 사려 깊은 태도를 보임.',
+  positive_attitude: '활동 중 어려움이 있어도 긍정적인 태도로 다시 시도하며 분위기를 밝게 만드는 모습을 보임.',
+  self_control: '활동 상황에서 자신의 말과 행동을 조절하려는 태도가 있으며 차분하게 과제에 참여함.',
+  impulsive: '순간적으로 앞서 행동하는 경우가 있으나 안내를 받으면 차분히 조절하려는 변화가 나타남.',
+  artistic_talent: '표현 활동에서 감각적인 아이디어를 떠올리고 자신의 생각을 개성 있게 드러내는 모습을 보임.',
+  mathematical_aptitude: '수학적 상황에서 규칙과 관계를 파악하려는 태도가 있으며 문제를 논리적으로 살피는 힘이 돋보임.',
+  language_skills: '말과 글로 생각을 표현하는 데 강점이 있으며 상황에 맞는 어휘를 사용하려는 태도가 나타남.',
+  physical_coordination: '신체 활동에서 움직임을 조절하고 주어진 동작을 안정적으로 수행하는 모습을 보임.',
+  technology_interest: '기술과 도구 활용에 관심을 보이며 새로운 방법을 익혀 활동에 적용하려는 태도가 나타남.',
+  musical_talent: '음악 활동에서 리듬과 표현을 살리며 자신의 감정을 자연스럽게 드러내는 모습을 보임.',
+  athletic_ability: '체육 활동에서 신체 능력을 바탕으로 적극적으로 참여하고 규칙을 지키려는 태도를 보임.',
+  science_interest: '과학 활동에서 현상을 관찰하고 까닭을 탐색하려는 태도가 있으며 탐구 과정에 흥미를 보임.',
+  writing_talent: '글쓰기 활동에서 생각을 구체적으로 풀어내고 표현을 다듬으려는 태도가 돋보임.',
+  area_exploration: '다양한 활동을 경험하며 자신의 관심 영역을 찾아가려는 탐색 태도가 나타남.'
+};
 
-  text = text
-    .replace(/보이며$/, '보이는 모습')
-    .replace(/참여하며$/, '참여하는 태도')
-    .replace(/질문하며$/, '질문하는 태도')
-    .replace(/수행하고$/, '수행하는 태도')
-    .replace(/실천하며$/, '실천하는 태도')
-    .replace(/정리하며$/, '정리하는 태도')
-    .replace(/준비하며$/, '준비하는 태도')
-    .replace(/기대되며$/, '개선이 필요한 모습')
-    .replace(/협력하여$/, '협력하는 태도')
-    .replace(/마음으로$/, '마음')
-    .replace(/표현하고$/, '표현하는 태도')
-    .replace(/도우며$/, '도움을 주는 태도')
-    .replace(/이끌어가며$/, '이끌어가는 모습')
-    .replace(/해결하며$/, '해결하는 태도')
-    .replace(/생각하며$/, '생각하는 태도')
-    .replace(/판단하며$/, '판단하는 태도')
-    .replace(/발표하며$/, '발표하는 태도')
-    .replace(/제시하며$/, '제시하는 태도')
-    .replace(/참여하며$/, '참여하는 태도')
-    .replace(/수행하며$/, '수행하는 태도')
-    .replace(/갖고$/, '가진 태도')
-    .replace(/태도로$/, '태도')
-    .replace(/노력하며$/, '노력하는 태도')
-    .replace(/행동하며$/, '행동하는 태도')
-    .replace(/바탕으로$/, '바탕')
-    .replace(/발휘하며$/, '발휘하는 모습')
-    .replace(/으로$/, '')
-    .trim();
+const fallbackSupportSentences = [
+  '학습 과정에서 필요한 내용을 차분히 확인하고 자신의 방식으로 정리하며, 활동 경험을 다음 과제와 생활 장면에 구체적으로 연결하려는 태도가 매우 꾸준하고 안정적임.',
+  '친구들과 함께하는 활동에서는 상황을 살피며 역할을 수행하고 공동의 목표를 이루려는 모습을 보임.',
+  '주어진 과제 앞에서 다시 시도하려는 마음가짐이 있으며 활동 경험을 통해 자신의 강점을 넓혀 감.',
+  '생활 속 여러 장면에서 성실한 태도를 바탕으로 학습과 관계 면에서 균형 있게 성장하는 모습을 보임.'
+];
 
-  return text || '관찰된 긍정적 태도';
-}
+function buildFallbackBehaviorText(keywordEntries: Array<[string, unknown]>) {
+  const selectedSentences = keywordEntries
+    .map(([keywordId]) => fallbackSentences[keywordId])
+    .filter((sentence): sentence is string => Boolean(sentence));
 
-function buildFallbackBehaviorText(keywordTexts: string[]) {
-  const focusItems = keywordTexts.slice(0, 5).map(toObservationNoun);
-  const focus = focusItems.join(', ');
+  const sentences: string[] = [];
+  for (const sentence of selectedSentences) {
+    if (!sentences.includes(sentence)) {
+      sentences.push(sentence);
+    }
+    if (sentences.length >= 5) break;
+  }
 
-  return [
-    `선택된 관찰 요소인 ${focus}을 바탕으로 수업과 생활 장면에서 안정적인 성장 흐름을 보임.`,
-    '학습 과정에서 맡은 과제를 차분히 확인하고 필요한 내용을 스스로 정리하려는 태도가 꾸준함.',
-    '친구들과 함께하는 활동에서 서로의 의견을 듣고 자신의 생각을 조리 있게 표현하려는 노력이 나타남.',
-    '주어진 역할을 끝까지 완수하려는 책임감이 있으며 어려운 상황에서도 다시 시도하려는 태도가 돋보임.',
-    '여러 활동을 통해 관찰된 강점을 생활 속 실천으로 연결하며 학습 태도와 공동체 생활 전반에서 균형 있게 성장하는 모습을 보임.'
-  ].join(' ');
+  for (const sentence of fallbackSupportSentences) {
+    if (sentences.join(' ').length >= 350 || sentences.length >= 6) break;
+    if (!sentences.includes(sentence)) {
+      sentences.push(sentence);
+    }
+  }
+
+  while (sentences.join(' ').length > 480 && sentences.length > 4) {
+    sentences.splice(sentences.length - 2, 1);
+  }
+
+  return sentences.join(' ');
 }
 
 async function generateBehaviorText(apiKey: string, prompt: string) {
@@ -197,7 +242,8 @@ export async function POST(request: NextRequest) {
     }
 
     // Apps Script 강도 조절 시스템 적용
-    const keywordTexts = Object.entries(keywords).map(([keywordId, intensity]) => {
+    const keywordEntries = Object.entries(keywords);
+    const keywordTexts = keywordEntries.map(([keywordId, intensity]) => {
       const baseText = keywordData[keywordId] || keywordId;
       const modifier = intensityModifiers[intensity as 1 | 2 | 3];
 
@@ -318,7 +364,7 @@ export async function POST(request: NextRequest) {
     }
 
     if (!validation.isValid) {
-      const fallbackText = buildFallbackBehaviorText(keywordTexts);
+      const fallbackText = buildFallbackBehaviorText(keywordEntries);
       validation = validateBehaviorCharacteristic(fallbackText);
     }
 
